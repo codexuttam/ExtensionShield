@@ -398,7 +398,7 @@ const ReportDetailPage = () => {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => window.open(`http://localhost:8007/api/scan/report/${reportId}`, '_blank')}
+              onClick={() => window.open(`${import.meta.env.VITE_API_URL || ""}/api/scan/report/${reportId}`, '_blank')}
             >
               📥 PDF
             </Button>
