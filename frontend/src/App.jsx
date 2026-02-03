@@ -5,7 +5,7 @@ import { ScanProvider } from "./context/ScanContext";
 
 // Pages
 import HomePage from "./pages/HomePage";
-import { ScannerPage, ScanProgressPage, ScanResultsPage } from "./pages/scanner";
+import { ScannerPage, ScanProgressPage, ScanResultsPage, ScanResultsPageV2 } from "./pages/scanner";
 import { ReportsPage, ReportDetailPage } from "./pages/reports";
 import ScanHistoryPage from "./pages/ScanHistoryPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -329,7 +329,9 @@ function AppContent() {
           {/* Scanner Routes */}
           <Route path="/scanner" element={<ScannerPage />} />
           <Route path="/scanner/progress/:scanId" element={<ScanProgressPage />} />
-          <Route path="/scanner/results/:scanId" element={<ScanResultsPage />} />
+          <Route path="/scanner/results/:scanId" element={<ScanResultsPageV2 />} />
+          {/* Legacy results page route (for direct access if needed) */}
+          <Route path="/scanner/results-legacy/:scanId" element={<ScanResultsPage />} />
           
           {/* History */}
           <Route path="/history" element={<ScanHistoryPage />} />
