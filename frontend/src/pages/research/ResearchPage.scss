@@ -1,0 +1,176 @@
+/* ============================================================================
+   Research Page
+   ============================================================================ */
+
+.research-page {
+  min-height: 100vh;
+  background: var(--atlas-bg-primary, #030712);
+  color: var(--atlas-text-primary, #f8fafc);
+  position: relative;
+}
+
+.research-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  
+  .bg-gradient {
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse 80% 50% at 50% 0%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 50% 100%, rgba(34, 197, 94, 0.08) 0%, transparent 50%);
+  }
+  
+  .bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(148, 163, 184, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+  }
+}
+
+.research-content {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 6rem 2rem 4rem;
+}
+
+.research-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.research-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a78bfa;
+  margin-bottom: 1.5rem;
+}
+
+.research-header h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.research-header p {
+  font-size: 1.125rem;
+  color: var(--atlas-text-secondary, #94a3b8);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+.research-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.research-card {
+  position: relative;
+  padding: 2rem;
+  background: rgba(10, 15, 26, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 16px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: rgba(34, 197, 94, 0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    
+    .card-link svg {
+      transform: translateX(4px);
+    }
+  }
+  
+  &.featured {
+    grid-column: span 2;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(10, 15, 26, 0.6) 100%);
+    border-color: rgba(34, 197, 94, 0.2);
+    
+    @media (max-width: 768px) {
+      grid-column: span 1;
+    }
+  }
+  
+  &.coming-soon {
+    opacity: 0.7;
+    cursor: default;
+    
+    &:hover {
+      transform: none;
+      border-color: rgba(148, 163, 184, 0.1);
+    }
+  }
+}
+
+.card-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.card-content h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: var(--atlas-text-primary, #f8fafc);
+}
+
+.card-content p {
+  font-size: 0.9375rem;
+  color: var(--atlas-text-secondary, #94a3b8);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--atlas-accent, #22c55e);
+  
+  svg {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.3s ease;
+  }
+}
+
+.coming-soon-badge {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--atlas-text-muted, #64748b);
+}
+
