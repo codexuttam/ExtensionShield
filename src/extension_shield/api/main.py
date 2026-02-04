@@ -101,8 +101,10 @@ def load_existing_results():
 load_existing_results()
 
 # Directory for storing analysis results
-RESULTS_DIR = Path("extensions_storage")
-RESULTS_DIR.mkdir(exist_ok=True)
+# Use environment variable or default to extensions_storage in current directory
+STORAGE_PATH = os.environ.get("EXTENSION_STORAGE_PATH", "extensions_storage")
+RESULTS_DIR = Path(STORAGE_PATH).resolve()  # Convert to absolute path
+RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def extract_extension_id(url: str) -> Optional[str]:
@@ -1347,7 +1349,124 @@ async def clear_all_scans():
 @app.get("/health")
 async def health_check():
     """Health check endpoint for container orchestration."""
-    return {"status": "healthy", "service": "project-atlas", "version": "1.0.0"}
+    return {
+        "status": "healthy", 
+        "service": "project-atlas", 
+        "version": "1.0.0",
+        "storage_path": str(RESULTS_DIR),
+        "storage_exists": RESULTS_DIR.exists()
+    }
+
+
+@app.get("/api/scan/icon/{extension_id}")
+async def get_extension_icon(extension_id: str):
+    """
+    Get extension icon from the extracted extension folder.
+    Tries common icon sizes (128, 64, 48, 32, 16) and returns the first found.
+    
+    Args:
+        extension_id: Chrome extension ID
+        
+    Returns:
+        PNG icon file
+    """
+    results = scan_results.get(extension_id)
+    if not results:
+        raise HTTPException(status_code=404, detail="Extension not found")
+    
+    extracted_path = results.get("extracted_path")
+    if not extracted_path:
+        raise HTTPException(status_code=404, detail="Extracted path not available")
+    
+    # Convert to absolute path if it's relative (for Railway deployment)
+    if not os.path.isabs(extracted_path):
+        extracted_path = os.path.join(str(RESULTS_DIR), os.path.basename(extracted_path))
+    
+    # Verify the path exists
+    if not os.path.exists(extracted_path):
+        logger.warning(f"Extracted path does not exist: {extracted_path}")
+        raise HTTPException(status_code=404, detail="Extracted files not found")
+    
+    # Try common icon sizes in order of preference
+    icon_sizes = ["128", "64", "48", "32", "16", "96", "256"]
+    icons_dir = os.path.join(extracted_path, "icons")
+    
+    # First try icons directory
+    if os.path.exists(icons_dir):
+        for size in icon_sizes:
+            icon_path = os.path.join(icons_dir, f"{size}.png")
+            if os.path.exists(icon_path):
+                logger.debug(f"Found icon at: {icon_path}")
+                return FileResponse(
+                    icon_path, 
+                    media_type="image/png",
+                    headers={
+                        "Cache-Control": "public, max-age=86400",  # Cache for 24 hours
+                        "Access-Control-Allow-Origin": "*"
+                    }
+                )
+    
+    # Try root directory
+    for size in icon_sizes:
+        icon_path = os.path.join(extracted_path, f"icon{size}.png")
+        if os.path.exists(icon_path):
+            logger.debug(f"Found icon at: {icon_path}")
+            return FileResponse(
+                icon_path, 
+                media_type="image/png",
+                headers={
+                    "Cache-Control": "public, max-age=86400",
+                    "Access-Control-Allow-Origin": "*"
+                }
+            )
+        
+        icon_path = os.path.join(extracted_path, f"{size}.png")
+        if os.path.exists(icon_path):
+            logger.debug(f"Found icon at: {icon_path}")
+            return FileResponse(
+                icon_path, 
+                media_type="image/png",
+                headers={
+                    "Cache-Control": "public, max-age=86400",
+                    "Access-Control-Allow-Origin": "*"
+                }
+            )
+    
+    # Try checking manifest for icon paths
+    manifest_path = os.path.join(extracted_path, "manifest.json")
+    if os.path.exists(manifest_path):
+        try:
+            with open(manifest_path, "r", encoding="utf-8") as f:
+                manifest = json.load(f)
+                
+            # Check icons object in manifest
+            icons = manifest.get("icons", {})
+            if icons:
+                # Get the largest icon
+                largest_size = max(icons.keys(), key=lambda x: int(x))
+                icon_rel_path = icons[largest_size]
+                icon_path = os.path.join(extracted_path, icon_rel_path)
+                
+                # Security check
+                abs_icon_path = os.path.abspath(icon_path)
+                abs_extracted_path = os.path.abspath(extracted_path)
+                
+                if abs_icon_path.startswith(abs_extracted_path):
+                    if os.path.exists(icon_path):
+                        logger.debug(f"Found icon from manifest at: {icon_path}")
+                        return FileResponse(
+                            icon_path, 
+                            media_type="image/png",
+                            headers={
+                                "Cache-Control": "public, max-age=86400",
+                                "Access-Control-Allow-Origin": "*"
+                            }
+                        )
+        except Exception as e:
+            logger.warning(f"Failed to read manifest for icons: {e}")
+    
+    logger.warning(f"No icon found for extension {extension_id} at path: {extracted_path}")
+    raise HTTPException(status_code=404, detail="No icon found for this extension")
 
 
 @app.get("/api/scan/icon/{extension_id}")
