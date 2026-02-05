@@ -23,6 +23,7 @@ from extension_shield.core.report_generator import ReportGenerator
 from extension_shield.workflow.graph import build_graph
 from extension_shield.workflow.state import WorkflowState, WorkflowStatus
 from extension_shield.api.database import db
+from extension_shield.api.supabase_auth import get_current_user_id as _get_current_user_id
 from extension_shield.scoring.engine import ScoringEngine
 from extension_shield.governance.tool_adapters import SignalPackBuilder
 from extension_shield.core.config import get_settings
@@ -67,6 +68,19 @@ app = FastAPI(
     description="REST API for Chrome extension security analysis",
     version="1.0.0",
 )
+
+
+@app.middleware("http")
+async def attach_user_context(request: Request, call_next):
+    """
+    Best-effort auth context.
+    If token is missing/invalid, user_id will be None.
+    """
+    try:
+        request.state.user_id = _get_current_user_id(request)
+    except Exception:
+        request.state.user_id = None
+    return await call_next(request)
 
 # Configure CORS
 app.add_middleware(

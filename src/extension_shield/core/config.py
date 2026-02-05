@@ -89,6 +89,8 @@ class Settings:
     supabase_url: Optional[str]
     supabase_key: Optional[str]
     supabase_scan_results_table: str
+    supabase_jwks_url: Optional[str]
+    supabase_jwt_aud: str
 
     @property
     def paths(self) -> LocalPaths:
@@ -156,6 +158,12 @@ def get_settings() -> Settings:
     supabase_url = os.environ.get("SUPABASE_URL")
     supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_ANON_KEY")
     supabase_scan_results_table = os.environ.get("SUPABASE_SCAN_RESULTS_TABLE", "scan_results")
+    supabase_jwt_aud = os.environ.get("SUPABASE_JWT_AUD", "authenticated")
+
+    supabase_jwks_url: Optional[str] = None
+    if supabase_url:
+        base = supabase_url.rstrip("/")
+        supabase_jwks_url = f"{base}/auth/v1/.well-known/jwks.json"
 
     storage_backend = _parse_storage_backend(os.environ.get("STORAGE_BACKEND"))
 
@@ -175,6 +183,8 @@ def get_settings() -> Settings:
         supabase_url=supabase_url,
         supabase_key=supabase_key,
         supabase_scan_results_table=supabase_scan_results_table,
+        supabase_jwks_url=supabase_jwks_url,
+        supabase_jwt_aud=supabase_jwt_aud,
     )
     settings.validate()
     return settings
