@@ -78,7 +78,7 @@ export const topNavItems = [
 export const megaMenuConfig = {
   trigger: {
     label: "Resources",
-    matchPaths: ["/open-source", "/gsoc", "/contribute"]
+    matchPaths: ["/open-source", "/gsoc", "/contribute", "/about"]
   },
   items: [
     {
@@ -98,6 +98,12 @@ export const megaMenuConfig = {
       label: "Contribute",
       description: "Get started guide",
       path: "/contribute"
+    },
+    {
+      icon: "👤",
+      label: "About",
+      description: "Founder's story",
+      path: "/about"
     },
     {
       icon: "github",

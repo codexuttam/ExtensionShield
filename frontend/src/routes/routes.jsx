@@ -24,6 +24,7 @@ const ContributePage = React.lazy(() => import("../pages/gsoc/ContributePage"));
 const CommunityPage = React.lazy(() => import("../pages/gsoc/CommunityPage"));
 const BlogPage = React.lazy(() => import("../pages/gsoc/BlogPage"));
 const OpenSourcePage = React.lazy(() => import("../pages/open-source/OpenSourcePage"));
+const AboutUsPage = React.lazy(() => import("../pages/AboutUsPage"));
 
 // Extension Pages
 const ExtensionPage = React.lazy(() => import("../pages/extension/ExtensionPage"));
@@ -180,6 +181,17 @@ export const routes = [
   },
 
   // ============ OPEN SOURCE / GSOC ROUTES ============
+  {
+    path: "/about",
+    element: <AboutUsPage />,
+    seo: {
+      title: "About Us | ExtensionShield",
+      description: "Learn about ExtensionShield's founder, Stanzin, and why this project was created to help users understand browser extension security.",
+      canonical: "/about"
+    },
+    priority: 0.7,
+    changefreq: "monthly"
+  },
   {
     path: "/open-source",
     element: <OpenSourcePage />,
