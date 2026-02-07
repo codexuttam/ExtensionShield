@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 
 const ThemeContext = createContext();
 
@@ -10,7 +11,11 @@ export const useTheme = () => {
   return context;
 };
 
+// Routes that should always use dark mode (except homepage)
+const FORCE_DARK_ROUTES = ["/settings", "/reports"];
+
 export const ThemeProvider = ({ children }) => {
+  const location = useLocation();
   const [theme, setTheme] = useState(() => {
     // Check localStorage first, then system preference, then default to dark
     const stored = localStorage.getItem("theme");
@@ -23,13 +28,22 @@ export const ThemeProvider = ({ children }) => {
     return "dark";
   });
 
+  // Determine effective theme based on route
+  const effectiveTheme = useMemo(() => {
+    // Force dark mode on specific routes (but not homepage)
+    if (location.pathname !== "/" && FORCE_DARK_ROUTES.some(route => location.pathname.startsWith(route))) {
+      return "dark";
+    }
+    return theme;
+  }, [theme, location.pathname]);
+
   useEffect(() => {
-    // Apply theme to document
+    // Apply effective theme to document
     document.documentElement.classList.remove("light", "dark");
-    document.documentElement.classList.add(theme);
+    document.documentElement.classList.add(effectiveTheme);
     
-    // Update CSS variables based on theme
-    if (theme === "light") {
+    // Update CSS variables based on effective theme
+    if (effectiveTheme === "light") {
       document.documentElement.style.backgroundColor = "#ffffff";
       document.body.style.backgroundColor = "#ffffff";
     } else {
@@ -37,16 +51,18 @@ export const ThemeProvider = ({ children }) => {
       document.body.style.backgroundColor = "#0a0f1a";
     }
     
-    // Save to localStorage
-    localStorage.setItem("theme", theme);
-  }, [theme]);
+    // Save actual theme (not effective theme) to localStorage
+    if (effectiveTheme === theme) {
+      localStorage.setItem("theme", theme);
+    }
+  }, [effectiveTheme, theme]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
+    <ThemeContext.Provider value={{ theme: effectiveTheme, toggleTheme, setTheme, actualTheme: theme }}>
       {children}
     </ThemeContext.Provider>
   );
