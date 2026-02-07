@@ -94,6 +94,10 @@ export const ScanProvider = ({ children }) => {
           if (status.error_code === 401 || status.error?.includes("API key") || status.error?.includes("Invalid API key") || status.error?.includes("Authentication") || status.error?.includes("sk-proj")) {
             throw new Error("Connection is down try back in a while");
           }
+          // Check for connection refused errors (503) - LLM service issues
+          if (status.error_code === 503 || status.error?.includes("Connection refused") || status.error?.includes("Errno 61") || status.error?.includes("LLM service")) {
+            throw new Error("LLM service unavailable. Please check your LLM provider configuration.");
+          }
           throw new Error(status.error || "Scan failed on the server.");
         }
       }
@@ -185,6 +189,8 @@ export const ScanProvider = ({ children }) => {
       let errorMessage = err.message || "Failed to scan extension.";
       if (err.message?.includes("API key") || err.message?.includes("Invalid API key") || err.message?.includes("Authentication") || err.message?.includes("401")) {
         errorMessage = "Connection is down try back in a while";
+      } else if (err.message?.includes("Connection refused") || err.message?.includes("Errno 61") || err.message?.includes("LLM service")) {
+        errorMessage = "LLM service unavailable. Please check your LLM provider configuration (LLM_FALLBACK_CHAIN).";
       }
       setError(errorMessage);
       setScanStage(null);
