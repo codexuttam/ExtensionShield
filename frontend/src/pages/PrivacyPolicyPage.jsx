@@ -1,227 +1,245 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, FileText, Shield, Lock, Eye, Database, Users } from "lucide-react";
+import { ArrowLeft, FileText, Database, Eye, Users, Lock, Shield, Cookie, Baby, RefreshCw, Mail } from "lucide-react";
 import { Button } from "../components/ui/button";
+import "./PrivacyPolicyPage.scss";
 
 const PrivacyPolicyPage = () => {
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <Link to="/settings" className="inline-flex items-center gap-2 text-foreground-muted hover:text-primary mb-4 transition-colors">
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Settings</span>
-        </Link>
-        <h1 className="page-title">
-          <FileText className="inline-block w-6 h-6 mr-2" />
-          Privacy Policy
-        </h1>
-        <p className="page-subtitle">
-          Last updated: {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-        </p>
-      </div>
-
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Introduction */}
-        <div className="glass-card p-6">
-          <h2 className="text-2xl font-bold mb-4">Introduction</h2>
-          <p className="text-foreground-muted leading-relaxed">
-            ExtensionShield ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy 
-            explains how we collect, use, disclose, and safeguard your information when you use our Chrome extension 
-            security scanning service. Please read this policy carefully to understand our practices regarding your 
-            data and how we will treat it.
+    <div className="privacy-policy-page">
+      <div className="page-container">
+        <div className="page-header">
+          <Link to="/settings" className="back-link">
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Settings</span>
+          </Link>
+          <h1 className="page-title">
+            <FileText className="w-6 h-6" />
+            Privacy Policy
+          </h1>
+          <p className="page-subtitle">
+            Last updated: February 7, 2026
           </p>
         </div>
 
-        {/* Information We Collect */}
-        <div className="glass-card p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Database className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold">Information We Collect</h2>
+        <div className="privacy-content">
+          {/* Introduction */}
+          <div className="glass-card">
+            <h2 className="section-title">Introduction</h2>
+            <p className="section-text">
+              ExtensionShield ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard information when you use our extension security scanning service (the "Service").
+            </p>
           </div>
-          
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">1. Information You Provide</h3>
-              <ul className="list-disc list-inside space-y-2 text-foreground-muted ml-4">
-                <li>Extension URLs or IDs that you submit for scanning</li>
-                <li>Account information (name, email) when you sign in</li>
-                <li>Feedback, support requests, or communications with us</li>
+
+          {/* Information We Collect */}
+          <div className="glass-card">
+            <div className="section-header">
+              <Database className="section-icon" />
+              <h2 className="section-title">Information We Collect</h2>
+            </div>
+            
+            <div className="section-content">
+              <div className="subsection">
+                <h3 className="subsection-title">1) Information You Provide</h3>
+                <ul className="section-list">
+                  <li>Extension URLs or IDs you submit for scanning</li>
+                  <li>Account information (such as name and email) when you sign in</li>
+                  <li>Feedback, support requests, or other communications you send us</li>
+                </ul>
+              </div>
+
+              <div className="subsection">
+                <h3 className="subsection-title">2) Information Collected Automatically</h3>
+                <ul className="section-list">
+                  <li>Scan results and analysis data for extensions you scan</li>
+                  <li>Usage analytics (such as page views and feature usage) to improve the Service</li>
+                  <li>Technical information (such as browser type, IP address, device information, and log data)</li>
+                  <li>Cookies and similar technologies used for authentication, security, and analytics</li>
+                </ul>
+              </div>
+
+              <div className="subsection">
+                <h3 className="subsection-title">3) Extension Data We Analyze</h3>
+                <p className="section-text">
+                  When you scan a Chrome extension, we analyze information that is publicly available (for example, Chrome Web Store listings, manifests, permissions, and related metadata).
+                </p>
+                <p className="section-text">
+                  We do not intentionally collect personal data from an extension's end users.
+                </p>
+                <p className="section-text">
+                  If you use an Enterprise feature that involves uploading extension packages or files (if applicable), we process those files only to provide the requested analysis and protect the Service.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* How We Use Your Information */}
+          <div className="glass-card">
+            <div className="section-header">
+              <Eye className="section-icon" />
+              <h2 className="section-title">How We Use Your Information</h2>
+            </div>
+            
+            <p className="section-text mb-4">We use information to:</p>
+            <ul className="section-list">
+              <li>Provide, operate, maintain, and improve the Service</li>
+              <li>Process scan requests and generate reports</li>
+              <li>Authenticate users and manage preferences</li>
+              <li>Send notifications you enable (e.g., scan completion alerts)</li>
+              <li>Understand usage and improve performance and user experience</li>
+              <li>Comply with legal obligations and protect our rights and safety</li>
+              <li>Communicate with you about updates, support, and Service-related messages</li>
+            </ul>
+          </div>
+
+          {/* Data Sharing and Disclosure */}
+          <div className="glass-card">
+            <div className="section-header">
+              <Users className="section-icon" />
+              <h2 className="section-title">Data Sharing and Disclosure</h2>
+            </div>
+            
+            <div className="section-content">
+              <p className="section-text">
+                We do not sell your personal information.
+              </p>
+              <p className="section-text">
+                We may share information in limited circumstances:
+              </p>
+              <ul className="section-list">
+                <li><strong>Service Providers:</strong> vendors who help us run the Service (e.g., hosting, authentication, analytics, email delivery, error monitoring)</li>
+                <li><strong>Legal Requirements:</strong> if required by law, regulation, or legal process, or to protect rights and safety</li>
+                <li><strong>Business Transfers:</strong> in connection with a merger, acquisition, or sale of assets</li>
+                <li><strong>With Your Consent:</strong> when you ask or explicitly agree</li>
               </ul>
             </div>
+          </div>
 
-            <div>
-              <h3 className="text-lg font-semibold mb-2">2. Automatically Collected Information</h3>
-              <ul className="list-disc list-inside space-y-2 text-foreground-muted ml-4">
-                <li>Scan results and analysis data for extensions you scan</li>
-                <li>Usage analytics (page views, feature usage) to improve our service</li>
-                <li>Technical information (browser type, IP address, device information)</li>
-                <li>Cookies and similar tracking technologies</li>
-              </ul>
+          {/* Data Retention */}
+          <div className="glass-card">
+            <div className="section-header">
+              <Database className="section-icon" />
+              <h2 className="section-title">Data Retention</h2>
             </div>
+            
+            <p className="section-text">
+              We retain personal information only as long as necessary for the purposes described in this policy, including to provide the Service, comply with legal obligations, resolve disputes, and enforce agreements.
+            </p>
+            <p className="section-text mt-4">
+              Typical examples:
+            </p>
+            <ul className="section-list">
+              <li>Account data is kept until you delete your account (subject to legal requirements).</li>
+              <li>Scan history and logs may be retained for a limited period for security, debugging, and abuse prevention.</li>
+            </ul>
+          </div>
 
-            <div>
-              <h3 className="text-lg font-semibold mb-2">3. Extension Data</h3>
-              <p className="text-foreground-muted">
-                When you scan a Chrome extension, we analyze publicly available information from the Chrome Web Store, 
-                including manifest files, permissions, and store listings. We do not access or store any personal data 
-                from the extensions themselves.
+          {/* Data Security */}
+          <div className="glass-card">
+            <div className="section-header">
+              <Lock className="section-icon" />
+              <h2 className="section-title">Data Security</h2>
+            </div>
+            
+            <p className="section-text">
+              We use reasonable technical and organizational measures designed to protect information. However, no method of transmission or storage is 100% secure, and we cannot guarantee absolute security.
+            </p>
+          </div>
+
+          {/* Your Rights and Choices */}
+          <div className="glass-card">
+            <div className="section-header">
+              <Shield className="section-icon" />
+              <h2 className="section-title">Your Rights and Choices</h2>
+            </div>
+            
+            <p className="section-text mb-4">
+              Depending on your location, you may have rights regarding your personal information, such as:
+            </p>
+            
+            <ul className="section-list">
+              <li>Access, correction, deletion</li>
+              <li>Portability</li>
+              <li>Objection or restriction of certain processing</li>
+              <li>Withdrawal of consent (where applicable)</li>
+            </ul>
+            
+            <p className="section-text mt-4">
+              You can also opt out of non-essential marketing emails by using the unsubscribe link (if provided) or contacting us.
+            </p>
+            <p className="section-text mt-4">
+              To exercise rights, contact us using the details below.
+            </p>
+          </div>
+
+          {/* Cookies and Similar Technologies */}
+          <div className="glass-card">
+            <div className="section-header">
+              <Cookie className="section-icon" />
+              <h2 className="section-title">Cookies and Similar Technologies</h2>
+            </div>
+            
+            <p className="section-text">
+              We use cookies and similar technologies to operate the Service, keep you signed in, enhance security, and understand usage. You can control cookies through your browser settings, but some features may not function properly if cookies are disabled.
+            </p>
+          </div>
+
+          {/* Children's Privacy */}
+          <div className="glass-card">
+            <div className="section-header">
+              <Baby className="section-icon" />
+              <h2 className="section-title">Children's Privacy</h2>
+            </div>
+            
+            <p className="section-text">
+              The Service is not intended for children under 13, and we do not knowingly collect personal information from children under 13. If you believe a child has provided personal information, contact us and we will take appropriate steps to delete it.
+            </p>
+          </div>
+
+          {/* Changes to This Privacy Policy */}
+          <div className="glass-card">
+            <div className="section-header">
+              <RefreshCw className="section-icon" />
+              <h2 className="section-title">Changes to This Privacy Policy</h2>
+            </div>
+            
+            <p className="section-text">
+              We may update this Privacy Policy from time to time. We will post the updated version on this page and update the "Last updated" date.
+            </p>
+          </div>
+
+          {/* Contact Us */}
+          <div className="glass-card contact-card">
+            <div className="section-header">
+              <Mail className="section-icon" />
+              <h2 className="section-title">Contact Us</h2>
+            </div>
+            
+            <div className="contact-info">
+              <p className="section-text">
+                <strong>For privacy questions or data requests:</strong>{" "}
+                <a href="mailto:privacy@extensionshield.com" className="contact-link">
+                  privacy@extensionshield.com
+                </a>
+              </p>
+              <p className="section-text">
+                <strong>For general support:</strong>{" "}
+                <a href="mailto:support@extensionshield.com" className="contact-link">
+                  support@extensionshield.com
+                </a>
               </p>
             </div>
           </div>
-        </div>
 
-        {/* How We Use Your Information */}
-        <div className="glass-card p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Eye className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold">How We Use Your Information</h2>
+          {/* Back to Settings */}
+          <div className="back-button-container">
+            <Link to="/settings">
+              <Button variant="outline" className="back-button">
+                <ArrowLeft className="w-4 h-4" />
+                Back to Settings
+              </Button>
+            </Link>
           </div>
-          
-          <ul className="list-disc list-inside space-y-2 text-foreground-muted ml-4">
-            <li>To provide, maintain, and improve our scanning service</li>
-            <li>To process your scan requests and generate security reports</li>
-            <li>To authenticate your account and manage your preferences</li>
-            <li>To send you notifications about scan completions (if enabled)</li>
-            <li>To analyze usage patterns and improve our service</li>
-            <li>To comply with legal obligations and protect our rights</li>
-            <li>To communicate with you about updates, features, or support</li>
-          </ul>
-        </div>
-
-        {/* Data Sharing and Disclosure */}
-        <div className="glass-card p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Users className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold">Data Sharing and Disclosure</h2>
-          </div>
-          
-          <div className="space-y-4">
-            <p className="text-foreground-muted">
-              We do not sell your personal information. We may share your information only in the following circumstances:
-            </p>
-            
-            <ul className="list-disc list-inside space-y-2 text-foreground-muted ml-4">
-              <li>
-                <strong>Service Providers:</strong> We may share data with third-party service providers who perform 
-                services on our behalf (e.g., hosting, analytics, authentication)
-              </li>
-              <li>
-                <strong>Legal Requirements:</strong> We may disclose information if required by law or to protect 
-                our rights and safety
-              </li>
-              <li>
-                <strong>Business Transfers:</strong> In the event of a merger, acquisition, or sale, your information 
-                may be transferred as part of that transaction
-              </li>
-              <li>
-                <strong>With Your Consent:</strong> We may share information with your explicit consent
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Data Security */}
-        <div className="glass-card p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Lock className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold">Data Security</h2>
-          </div>
-          
-          <p className="text-foreground-muted leading-relaxed">
-            We implement appropriate technical and organizational measures to protect your personal information against 
-            unauthorized access, alteration, disclosure, or destruction. However, no method of transmission over the 
-            Internet or electronic storage is 100% secure. While we strive to use commercially acceptable means to protect 
-            your data, we cannot guarantee absolute security.
-          </p>
-        </div>
-
-        {/* Your Rights */}
-        <div className="glass-card p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Shield className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold">Your Rights</h2>
-          </div>
-          
-          <p className="text-foreground-muted mb-4">
-            Depending on your location, you may have certain rights regarding your personal information:
-          </p>
-          
-          <ul className="list-disc list-inside space-y-2 text-foreground-muted ml-4">
-            <li><strong>Access:</strong> Request access to your personal data</li>
-            <li><strong>Correction:</strong> Request correction of inaccurate data</li>
-            <li><strong>Deletion:</strong> Request deletion of your personal data</li>
-            <li><strong>Portability:</strong> Request transfer of your data to another service</li>
-            <li><strong>Objection:</strong> Object to processing of your personal data</li>
-            <li><strong>Withdrawal:</strong> Withdraw consent where processing is based on consent</li>
-          </ul>
-          
-          <p className="text-foreground-muted mt-4">
-            To exercise these rights, please contact us at the information provided below.
-          </p>
-        </div>
-
-        {/* Cookies */}
-        <div className="glass-card p-6">
-          <h2 className="text-2xl font-bold mb-4">Cookies and Tracking</h2>
-          <p className="text-foreground-muted leading-relaxed">
-            We use cookies and similar tracking technologies to track activity on our service and hold certain information. 
-            You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent. However, if you 
-            do not accept cookies, you may not be able to use some portions of our service.
-          </p>
-        </div>
-
-        {/* Children's Privacy */}
-        <div className="glass-card p-6">
-          <h2 className="text-2xl font-bold mb-4">Children's Privacy</h2>
-          <p className="text-foreground-muted leading-relaxed">
-            Our service is not intended for children under the age of 13. We do not knowingly collect personal information 
-            from children under 13. If you are a parent or guardian and believe your child has provided us with personal 
-            information, please contact us immediately.
-          </p>
-        </div>
-
-        {/* Changes to This Policy */}
-        <div className="glass-card p-6">
-          <h2 className="text-2xl font-bold mb-4">Changes to This Privacy Policy</h2>
-          <p className="text-foreground-muted leading-relaxed">
-            We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new 
-            Privacy Policy on this page and updating the "Last updated" date. You are advised to review this Privacy 
-            Policy periodically for any changes.
-          </p>
-        </div>
-
-        {/* Contact Us */}
-        <div className="glass-card p-6 bg-primary/5 border-primary/20">
-          <h2 className="text-2xl font-bold mb-4">Contact Us</h2>
-          <p className="text-foreground-muted mb-4">
-            If you have any questions about this Privacy Policy, please contact us:
-          </p>
-          <div className="space-y-2 text-foreground-muted">
-            <p>
-              <strong>Email:</strong> privacy@extensionshield.com
-            </p>
-            <p>
-              <strong>GitHub:</strong>{" "}
-              <a 
-                href="https://github.com/Stanzin7/ExtensionShield" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                github.com/Stanzin7/ExtensionShield
-              </a>
-            </p>
-          </div>
-        </div>
-
-        {/* Back to Settings */}
-        <div className="flex justify-center pt-4">
-          <Link to="/settings">
-            <Button variant="outline" className="gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Settings
-            </Button>
-          </Link>
         </div>
       </div>
     </div>
