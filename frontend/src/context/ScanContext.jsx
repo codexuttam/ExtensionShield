@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import realScanService from "../services/realScanService";
 import databaseService from "../services/databaseService";
+import { normalizeExtensionId } from "../utils/extensionId";
 
 const ScanContext = createContext(null);
 
@@ -98,6 +99,10 @@ export const ScanProvider = ({ children }) => {
           if (status.error_code === 503 || status.error?.includes("Connection refused") || status.error?.includes("Errno 61") || status.error?.includes("LLM service")) {
             throw new Error("LLM service unavailable. Please check your LLM provider configuration.");
           }
+          // Check for quota errors (403) - token/quota exceeded
+          if (status.error_code === 403 || status.error?.includes("quota") || status.error?.includes("token_quota")) {
+            throw new Error(status.error || "LLM service quota exceeded. Please check your provider limits or add a fallback provider.");
+          }
           throw new Error(status.error || "Scan failed on the server.");
         }
       }
@@ -126,9 +131,15 @@ export const ScanProvider = ({ children }) => {
     setScanStage("extracting");
 
     try {
-      const extId = extractExtensionId(urlToScan);
-      if (!extId) {
+      const extIdRaw = extractExtensionId(urlToScan);
+      if (!extIdRaw) {
         throw new Error("Invalid Chrome Web Store URL format");
+      }
+
+      // Normalize the extension ID to ensure it's exactly 32 chars (a-p) and remove any trailing characters
+      const extId = normalizeExtensionId(extIdRaw);
+      if (!extId) {
+        throw new Error("Invalid Chrome extension ID format");
       }
 
       setCurrentExtensionId(extId);
@@ -205,6 +216,8 @@ export const ScanProvider = ({ children }) => {
         errorMessage = "Connection is down try back in a while";
       } else if (err.message?.includes("Connection refused") || err.message?.includes("Errno 61") || err.message?.includes("LLM service")) {
         errorMessage = "LLM service unavailable. Please check your LLM provider configuration (LLM_FALLBACK_CHAIN).";
+      } else if (err.message?.includes("quota") || err.message?.includes("token_quota") || err.message?.includes("403")) {
+        errorMessage = err.message || "LLM service quota exceeded. Please check your provider limits or add a fallback provider.";
       }
       setError(errorMessage);
       setScanStage(null);
@@ -243,7 +256,13 @@ export const ScanProvider = ({ children }) => {
         throw new Error("Failed to upload file");
       }
 
-      const extensionId = uploadResult.extension_id;
+      // Normalize the extension ID to ensure it's exactly 32 chars (a-p) and remove any trailing characters
+      const extensionIdRaw = uploadResult.extension_id;
+      const extensionId = normalizeExtensionId(extensionIdRaw);
+      if (!extensionId) {
+        throw new Error("Invalid extension ID format from upload");
+      }
+
       setCurrentExtensionId(extensionId);
       
       // Navigate to progress page
