@@ -59,3 +59,4 @@ create trigger scan_results_updated_at
 
 
 
+

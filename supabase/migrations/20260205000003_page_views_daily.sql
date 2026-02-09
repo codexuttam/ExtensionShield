@@ -32,3 +32,4 @@ alter table public.page_views_daily enable row level security;
 
 
 
+

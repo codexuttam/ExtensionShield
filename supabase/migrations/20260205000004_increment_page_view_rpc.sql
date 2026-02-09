@@ -32,3 +32,4 @@ grant execute on function public.increment_page_view(text, text) to service_role
 
 
 
+
