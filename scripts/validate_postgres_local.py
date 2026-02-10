@@ -22,8 +22,6 @@ if (PROJECT_ROOT / ".env").exists():
     from dotenv import load_dotenv
     load_dotenv(PROJECT_ROOT / ".env")
 
-from extension_shield.core.config import get_settings
-
 
 def main() -> int:
     url = os.environ.get("SUPABASE_URL")
