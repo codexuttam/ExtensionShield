@@ -6,6 +6,7 @@ and retrieve results.
 """
 
 import base64
+import mimetypes
 import os
 from pathlib import Path
 
@@ -649,6 +650,7 @@ _EXTENSION_ICON_PLACEHOLDER_B64 = (
     "PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4K"
     "ICA8cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxMiIgZmlsbD0iIzJBMkEzNSIvPgogIDxwYXRoIGQ9Ik0zMiAxNkMyNC4yNjggMTYgMTggMjIuMjY4IDE4IDMwQzE4IDMxLjY1NyAxOC4zMjEgMzMuMjI5IDE4LjkwOSAzNC42NjdMMjIuOTg0IDM0LjY2N0MyMy43MyAzNC42NjcgMjQuMzMzIDM1LjI3IDI0LjMzMyAzNi4wMTZWNDAuMDkxQzI0LjMzMyA0MC44MzggMjMuNzMgNDEuNDQxIDIyLjk4NCA0MS40NDFIMTguOTA5QzIwLjU3MSA0NS42ODcgMjQuMzMzIDQ5LjIyNCAyOC45NTkgNTAuNDg2VjQ2LjQxMUMyOC45NTkgNDUuNjY1IDI5LjU2MiA0NS4wNjIgMzAuMzA4IDQ1LjA2MkgzNC4zODNDMzUuMTMgNDUuMDYyIDM1LjczMyA0NC40NTkgMzUuNzMzIDQzLjcxM1YzOS42MzhDMzUuNzMzIDM4Ljg5MSAzNi4zMzYgMzguMjg4IDM3LjA4MyAzOC4yODhINDEuMTU3QzQxLjkwNCAzOC4yODggNDIuNTA3IDM3LjY4NSA0Mi41MDcgMzYuOTM4VjMyLjg2NEM0Mi41MDcgMzIuMTE3IDQzLjExIDMxLjUxNCA0My44NTcgMzEuNTE0SDQ3LjkzMkM0Ny45NzggMzEuMDE1IDQ4IDMwLjUxIDQ4IDMwQzQ4IDIyLjI2OCA0MS43MzIgMTYgMzIgMTZaIiBmaWxsPSIjNEE5MEU2Ii8+CiAgPGNpcmNsZSBjeD0iMjYiIGN5PSIyNiIgcj0iMyIgZmlsbD0iI0ZGRkZGRiIvPgo8L3N2Zz4="
 )
+_MAX_ICON_BYTES_FOR_DB = 2 * 1024 * 1024
 
 
 def _extension_icon_placeholder_response() -> Response:
@@ -662,6 +664,138 @@ def _extension_icon_placeholder_response() -> Response:
             "Access-Control-Allow-Origin": "*",
         },
     )
+
+
+def _normalize_image_media_type(media_type: Optional[str]) -> str:
+    """Normalize media type for icon responses."""
+    if not media_type or not isinstance(media_type, str):
+        return "image/png"
+    normalized = media_type.strip().lower()
+    if not normalized.startswith("image/"):
+        return "image/png"
+    return normalized
+
+
+def _extension_icon_response_from_base64(
+    icon_base64: Optional[str], icon_media_type: Optional[str]
+) -> Optional[Response]:
+    """Build an image response from persisted base64 icon data."""
+    if not icon_base64:
+        return None
+    try:
+        icon_bytes = base64.b64decode(icon_base64)
+    except Exception:
+        logger.warning("[ICON] Failed to decode persisted icon_base64")
+        return None
+
+    return Response(
+        content=icon_bytes,
+        media_type=_normalize_image_media_type(icon_media_type),
+        headers={
+            "Cache-Control": "public, max-age=86400",
+            "Access-Control-Allow-Origin": "*",
+        },
+    )
+
+
+def _extension_icon_file_response(icon_file_path: str) -> FileResponse:
+    """Build a file response with normalized icon media type and cache headers."""
+    guessed_media_type, _ = mimetypes.guess_type(icon_file_path)
+    return FileResponse(
+        icon_file_path,
+        media_type=_normalize_image_media_type(guessed_media_type),
+        headers={
+            "Cache-Control": "public, max-age=86400",
+            "Access-Control-Allow-Origin": "*",
+        },
+    )
+
+
+def _load_icon_record_from_db(extension_id: str) -> Dict[str, Optional[str]]:
+    """
+    Load icon-related fields for an extension from DB.
+    Works for both SQLite and Supabase, and gracefully handles older schemas.
+    """
+    record: Dict[str, Optional[str]] = {
+        "extracted_path": None,
+        "icon_path": None,
+        "icon_base64": None,
+        "icon_media_type": None,
+    }
+    try:
+        if hasattr(db, "get_connection"):
+            with db.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("PRAGMA table_info(scan_results)")
+                columns = [row[1] for row in cursor.fetchall()]
+                selected_columns = ["extracted_path"]
+                if "icon_path" in columns:
+                    selected_columns.append("icon_path")
+                if "icon_base64" in columns:
+                    selected_columns.append("icon_base64")
+                if "icon_media_type" in columns:
+                    selected_columns.append("icon_media_type")
+
+                cursor.execute(
+                    f"SELECT {', '.join(selected_columns)} FROM scan_results WHERE extension_id = ? LIMIT 1",
+                    (extension_id,),
+                )
+                row = cursor.fetchone()
+                if row:
+                    for idx, col_name in enumerate(selected_columns):
+                        record[col_name] = row[idx] if len(row) > idx else None
+        else:
+            row = db.get_scan_result(extension_id)
+            if row:
+                record["extracted_path"] = row.get("extracted_path")
+                record["icon_path"] = row.get("icon_path")
+                record["icon_base64"] = row.get("icon_base64")
+                record["icon_media_type"] = row.get("icon_media_type")
+    except Exception as exc:
+        logger.debug("[ICON] Could not load icon record from database: %s", exc)
+    return record
+
+
+def _extract_icon_blob_for_storage(
+    icon_path: Optional[str], extracted_path: Optional[str]
+) -> tuple[Optional[str], Optional[str]]:
+    """Encode icon bytes to base64 for DB persistence (production-safe fallback)."""
+    if not icon_path or not extracted_path:
+        return None, None
+    try:
+        abs_extracted_path = os.path.abspath(extracted_path)
+        candidate_path = (
+            os.path.abspath(icon_path)
+            if os.path.isabs(icon_path)
+            else os.path.abspath(os.path.join(extracted_path, icon_path))
+        )
+
+        # Security check: icon must stay inside extracted extension dir.
+        if os.path.commonpath([abs_extracted_path, candidate_path]) != abs_extracted_path:
+            logger.warning("[ICON] Refusing out-of-bounds icon path for persistence: %s", icon_path)
+            return None, None
+        if not os.path.isfile(candidate_path):
+            return None, None
+
+        with open(candidate_path, "rb") as icon_file:
+            icon_bytes = icon_file.read()
+        if not icon_bytes:
+            return None, None
+        if len(icon_bytes) > _MAX_ICON_BYTES_FOR_DB:
+            logger.warning(
+                "[ICON] Skipping icon persistence for oversized icon (%s bytes): %s",
+                len(icon_bytes),
+                candidate_path,
+            )
+            return None, None
+
+        icon_b64 = base64.b64encode(icon_bytes).decode("ascii")
+        guessed_media_type, _ = mimetypes.guess_type(candidate_path)
+        media_type = _normalize_image_media_type(guessed_media_type)
+        return icon_b64, media_type
+    except Exception as exc:
+        logger.warning("[ICON] Failed to persist icon bytes for %s: %s", icon_path, exc)
+        return None, None
 
 
 def _storage_relative_extracted_path(extension_dir: Optional[str]) -> Optional[str]:
@@ -789,6 +923,10 @@ async def run_analysis_workflow(url: str, extension_id: str):
             # Extract icon path from manifest
             extracted_path = final_state.get("extension_dir")
             icon_path = extract_icon_path(manifest, extracted_path)
+            icon_base64, icon_media_type = _extract_icon_blob_for_storage(
+                icon_path=icon_path,
+                extracted_path=extracted_path,
+            )
 
             # =================================================================
             # V2 SCORING: Build SignalPack and compute scores via ScoringEngine
@@ -854,6 +992,8 @@ async def run_analysis_workflow(url: str, extension_id: str):
                 "extracted_path": _storage_relative_extracted_path(final_state.get("extension_dir")),
                 "extracted_files": extracted_files,
                 "icon_path": icon_path,  # Relative path to icon (e.g., "icons/128.png")
+                "icon_base64": icon_base64,  # Persisted icon bytes for environments with ephemeral storage
+                "icon_media_type": icon_media_type,
                 # UI-first payload (production) - handle LLM failures gracefully
                 "report_view_model": _build_report_view_model_safe(
                     manifest=manifest,
@@ -2228,6 +2368,8 @@ async def get_scan_results(extension_id: str, http_request: Request):
             "privacy_compliance": results.get("privacy_compliance", {}),
             "extracted_path": results.get("extracted_path"),
             "icon_path": results.get("icon_path"),
+            "icon_base64": results.get("icon_base64"),
+            "icon_media_type": results.get("icon_media_type"),
             "extracted_files": results.get("extracted_files", []),
             "overall_security_score": results.get("security_score", 0),
             "total_findings": results.get("total_findings", 0),
@@ -3145,67 +3287,35 @@ async def database_health_check(request: Request):
 async def get_extension_icon(extension_id: str):
     """
     Get extension icon from the extracted extension folder.
-    Uses icon_path from database if available, otherwise tries common icon sizes.
+    Uses icon_path from storage when available, and falls back to persisted icon bytes.
     
     Args:
         extension_id: Chrome extension ID
         
     Returns:
-        PNG icon file
+        Icon image response (PNG/JPEG/WEBP/SVG)
     """
     logger.debug(f"[ICON] Request for extension_id={extension_id}")
     # Check if scan is completed first
     results = scan_results.get(extension_id)
     extracted_path = None
     icon_path = None
+    icon_base64 = None
+    icon_media_type = None
     
     if results:
         extracted_path = results.get("extracted_path")
         icon_path = results.get("icon_path")  # Use stored icon_path from database
+        icon_base64 = results.get("icon_base64")
+        icon_media_type = results.get("icon_media_type")
     else:
-        # Try loading from database if not in memory (SQLite or Supabase)
-        try:
-            if hasattr(db, "get_connection"):
-                # SQLite: use cursor
-                with db.get_connection() as conn:
-                    cursor = conn.cursor()
-                    cursor.execute("PRAGMA table_info(scan_results)")
-                    columns = [row[1] for row in cursor.fetchall()]
-                    has_icon_path = "icon_path" in columns
-                    if has_icon_path:
-                        cursor.execute(
-                            """
-                            SELECT extracted_path, icon_path
-                            FROM scan_results
-                            WHERE extension_id = ?
-                            LIMIT 1
-                            """,
-                            (extension_id,),
-                        )
-                        row = cursor.fetchone()
-                        if row:
-                            extracted_path = row[0] if len(row) > 0 else None
-                            icon_path = row[1] if len(row) > 1 else None
-                            if icon_path:
-                                logger.debug(f"Loaded icon_path from database: {icon_path}")
-                    else:
-                        cursor.execute(
-                            "SELECT extracted_path FROM scan_results WHERE extension_id = ? LIMIT 1",
-                            (extension_id,),
-                        )
-                        row = cursor.fetchone()
-                        if row:
-                            extracted_path = row[0] if len(row) > 0 else None
-            else:
-                # Supabase: get_scan_result returns row with extracted_path, icon_path (relative path)
-                row = db.get_scan_result(extension_id)
-                if row:
-                    extracted_path = row.get("extracted_path")
-                    icon_path = row.get("icon_path")
-                    if icon_path:
-                        logger.debug(f"Loaded icon_path from database: {icon_path}")
-        except Exception as e:
-            logger.debug(f"Could not load from database: {e}")
+        db_icon_record = _load_icon_record_from_db(extension_id)
+        extracted_path = db_icon_record.get("extracted_path")
+        icon_path = db_icon_record.get("icon_path")
+        icon_base64 = db_icon_record.get("icon_base64")
+        icon_media_type = db_icon_record.get("icon_media_type")
+        if icon_path:
+            logger.debug("Loaded icon_path from database: %s", icon_path)
         
         # Scan might still be running - try to find extracted extension in storage
         # Check if extension is being scanned
@@ -3254,7 +3364,26 @@ async def get_extension_icon(extension_id: str):
                     logger.debug(f"[ICON] Found extracted extension by ID: {extracted_path}")
                     break
     
+    db_icon_checked = bool(icon_base64)
+
+    def _persisted_icon_response() -> Optional[Response]:
+        nonlocal icon_base64, icon_media_type, db_icon_checked
+        response = _extension_icon_response_from_base64(icon_base64, icon_media_type)
+        if response:
+            return response
+        if not db_icon_checked:
+            db_icon_checked = True
+            db_icon_record = _load_icon_record_from_db(extension_id)
+            icon_base64 = db_icon_record.get("icon_base64")
+            icon_media_type = db_icon_record.get("icon_media_type")
+            return _extension_icon_response_from_base64(icon_base64, icon_media_type)
+        return None
+
     if not extracted_path:
+        persisted_response = _persisted_icon_response()
+        if persisted_response:
+            logger.debug("[ICON] Served persisted icon blob for %s", extension_id)
+            return persisted_response
         # Return placeholder - expected during early scan stages or when storage is ephemeral (Railway)
         logger.debug(f"[ICON] No extracted_path for {extension_id}, returning placeholder")
         return _extension_icon_placeholder_response()
@@ -3286,9 +3415,17 @@ async def get_extension_icon(extension_id: str):
                     logger.debug(f"Found extracted extension at: {extracted_path}")
                     break
             else:
+                persisted_response = _persisted_icon_response()
+                if persisted_response:
+                    logger.debug("[ICON] Served persisted icon blob for %s", extension_id)
+                    return persisted_response
                 logger.debug(f"[ICON] Extracted path not found for {extension_id}, returning placeholder")
                 return _extension_icon_placeholder_response()
         else:
+            persisted_response = _persisted_icon_response()
+            if persisted_response:
+                logger.debug("[ICON] Served persisted icon blob for %s", extension_id)
+                return persisted_response
             logger.debug(f"[ICON] Storage path missing for {extension_id}, returning placeholder")
             return _extension_icon_placeholder_response()
     
@@ -3304,14 +3441,7 @@ async def get_extension_icon(extension_id: str):
         logger.debug(f"[ICON] Trying stored icon_path: {full_icon_path}")
         if abs_icon_path.startswith(abs_extracted_path) and os.path.exists(full_icon_path):
             logger.info(f"[ICON] Found icon using stored icon_path: {full_icon_path}")
-            return FileResponse(
-                full_icon_path,
-                media_type="image/png",
-                headers={
-                    "Cache-Control": "public, max-age=86400",
-                    "Access-Control-Allow-Origin": "*"
-                }
-            )
+            return _extension_icon_file_response(full_icon_path)
         else:
             logger.warning(f"[ICON] Stored icon_path {icon_path} not found at {full_icon_path}, falling back to search")
     
@@ -3325,40 +3455,19 @@ async def get_extension_icon(extension_id: str):
             icon_path = os.path.join(icons_dir, f"{size}.png")
             if os.path.exists(icon_path):
                 logger.debug(f"Found icon at: {icon_path}")
-                return FileResponse(
-                    icon_path, 
-                    media_type="image/png",
-                    headers={
-                        "Cache-Control": "public, max-age=86400",  # Cache for 24 hours
-                        "Access-Control-Allow-Origin": "*"
-                    }
-                )
+                return _extension_icon_file_response(icon_path)
     
     # Try root directory
     for size in icon_sizes:
         test_icon_path = os.path.join(extracted_path, f"icon{size}.png")
         if os.path.exists(test_icon_path):
             logger.debug(f"Found icon at: {test_icon_path}")
-            return FileResponse(
-                test_icon_path, 
-                media_type="image/png",
-                headers={
-                    "Cache-Control": "public, max-age=86400",
-                    "Access-Control-Allow-Origin": "*"
-                }
-            )
+            return _extension_icon_file_response(test_icon_path)
         
         test_icon_path = os.path.join(extracted_path, f"{size}.png")
         if os.path.exists(test_icon_path):
             logger.debug(f"Found icon at: {test_icon_path}")
-            return FileResponse(
-                test_icon_path, 
-                media_type="image/png",
-                headers={
-                    "Cache-Control": "public, max-age=86400",
-                    "Access-Control-Allow-Origin": "*"
-                }
-            )
+            return _extension_icon_file_response(test_icon_path)
     
     # Try images directory (common for many extensions)
     images_dir = os.path.join(extracted_path, "images")
@@ -3368,14 +3477,7 @@ async def get_extension_icon(extension_id: str):
             icon_path = os.path.join(images_dir, icon_name)
             if os.path.exists(icon_path):
                 logger.debug(f"Found icon in images dir: {icon_path}")
-                return FileResponse(
-                    icon_path,
-                    media_type="image/png",
-                    headers={
-                        "Cache-Control": "public, max-age=86400",
-                        "Access-Control-Allow-Origin": "*"
-                    }
-                )
+                return _extension_icon_file_response(icon_path)
     
     # Try checking manifest for icon paths
     manifest_path = os.path.join(extracted_path, "manifest.json")
@@ -3399,17 +3501,15 @@ async def get_extension_icon(extension_id: str):
                 if abs_icon_path.startswith(abs_extracted_path):
                     if os.path.exists(manifest_icon_path):
                         logger.debug(f"Found icon from manifest at: {manifest_icon_path}")
-                        return FileResponse(
-                            manifest_icon_path, 
-                            media_type="image/png",
-                            headers={
-                                "Cache-Control": "public, max-age=86400",
-                                "Access-Control-Allow-Origin": "*"
-                            }
-                        )
+                        return _extension_icon_file_response(manifest_icon_path)
         except Exception as e:
             logger.warning(f"Failed to read manifest for icons: {e}")
     
+    persisted_response = _persisted_icon_response()
+    if persisted_response:
+        logger.debug("[ICON] Served persisted icon blob for %s", extension_id)
+        return persisted_response
+
     # No icon file found (path exists but no icon, or path from DB is gone - ephemeral storage)
     logger.debug(f"[ICON] No icon file for {extension_id}, returning placeholder")
     return _extension_icon_placeholder_response()

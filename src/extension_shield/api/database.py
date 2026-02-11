@@ -109,6 +109,8 @@ class Database:
                     extracted_path TEXT,
                     extracted_files TEXT,
                     icon_path TEXT,
+                    icon_base64 TEXT,
+                    icon_media_type TEXT,
                     error TEXT,
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
@@ -119,6 +121,16 @@ class Database:
             # Add icon_path column if it doesn't exist (for existing databases)
             try:
                 cursor.execute("ALTER TABLE scan_results ADD COLUMN icon_path TEXT")
+            except Exception:
+                # Column already exists, ignore
+                pass
+            try:
+                cursor.execute("ALTER TABLE scan_results ADD COLUMN icon_base64 TEXT")
+            except Exception:
+                # Column already exists, ignore
+                pass
+            try:
+                cursor.execute("ALTER TABLE scan_results ADD COLUMN icon_media_type TEXT")
             except Exception:
                 # Column already exists, ignore
                 pass
@@ -225,8 +237,8 @@ class Database:
                         high_risk_count, medium_risk_count, low_risk_count,
                         metadata, manifest, permissions_analysis, sast_results,
                         webstore_analysis, summary, extracted_path, extracted_files,
-                        icon_path, error, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        icon_path, icon_base64, icon_media_type, error, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                     (
                         extension_id,
@@ -250,6 +262,8 @@ class Database:
                         result.get("extracted_path"),
                         safe_json_dumps(result.get("extracted_files", [])),
                         result.get("icon_path"),  # Relative path to icon (e.g., "icons/128.png")
+                        result.get("icon_base64"),  # Persisted icon bytes for prod fallback
+                        result.get("icon_media_type"),
                         result.get("error"),
                         datetime.now().isoformat(),
                     ),
@@ -868,13 +882,25 @@ class SupabaseDatabase:
                 "extracted_path": result.get("extracted_path"),
                 "extracted_files": extracted_files,
                 "icon_path": result.get("icon_path"),  # Relative path to icon (e.g., "icons/128.png")
+                "icon_base64": result.get("icon_base64"),
+                "icon_media_type": result.get("icon_media_type"),
                 "error": result.get("error"),
                 # updated_at is auto-updated by trigger, but set it anyway for initial insert
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }
 
             # Upsert on extension_id
-            self.client.table(self.table_scan_results).upsert(row).execute()
+            try:
+                self.client.table(self.table_scan_results).upsert(row).execute()
+            except Exception as upsert_error:
+                # Allow rollout when DB migration for new icon columns is not applied yet.
+                upsert_error_str = str(upsert_error).lower()
+                if "icon_base64" in upsert_error_str or "icon_media_type" in upsert_error_str:
+                    row.pop("icon_base64", None)
+                    row.pop("icon_media_type", None)
+                    self.client.table(self.table_scan_results).upsert(row).execute()
+                else:
+                    raise
             print(f"[save_scan_result Supabase] Successfully saved scan for extension_id={extension_id}, status={result.get('status')}")
             return True
         except Exception as e:
