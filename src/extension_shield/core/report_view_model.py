@@ -26,6 +26,17 @@ from extension_shield.core.privacy_compliance_analyzer import PrivacyComplianceA
 from extension_shield.core.layer_details_generator import LayerDetailsGenerator
 from extension_shield.scoring.humanize import LayerHumanizer
 
+# Permission → plain English for Quick Summary "What It Can Do" (extends LayerHumanizer)
+PERMISSION_TO_PLAIN = {
+    **LayerHumanizer.PERMISSION_EXPLANATIONS,
+    "scripting": "run scripts on pages you visit",
+    "identity": "access your Google account info",
+    "alarms": "set background timers",
+    "desktopCapture": "record your desktop",
+    "tabCapture": "record a browser tab",
+    "script": "run scripts on pages",
+}
+
 
 logger = logging.getLogger(__name__)
 
@@ -266,6 +277,251 @@ def build_consumer_summary(
         "reasons": reasons,
         "access": access_bullet,
         "action": action_bullet,
+    }
+
+
+def build_unified_consumer_summary(
+    report_view_model: Dict[str, Any],
+    scoring_v2: Optional[Dict[str, Any]] = None,
+    analysis_results: Optional[Dict[str, Any]] = None,
+    manifest: Optional[Dict[str, Any]] = None,
+    extension_name: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Build a unified, LLM-powered consumer summary with plain English insights.
+    
+    This is a simpler format than the old consumer_summary:
+      - headline: One sentence takeaway (max 15 words)
+      - tldr: 2-3 sentences explaining the situation
+      - concerns: Top 3 specific concerns (deduplicated, plain English)
+      - recommendation: One actionable sentence
+    
+    Falls back to deterministic summary if LLM fails.
+    """
+    import json
+    import os
+    from langchain_core.prompts import PromptTemplate
+    from langchain_core.output_parsers import JsonOutputParser
+    from extension_shield.llm.prompts import get_prompts
+    from extension_shield.llm.clients.fallback import invoke_with_fallback
+
+    scorecard = report_view_model.get("scorecard", {})
+    evidence = report_view_model.get("evidence", {})
+    layer_details = report_view_model.get("layer_details", {})
+    highlights = report_view_model.get("highlights", {})
+    
+    score = scorecard.get("score", 0)
+    score_label = scorecard.get("score_label", "UNKNOWN")
+    host_access = evidence.get("host_access_summary", {})
+    capability_flags = evidence.get("capability_flags", {})
+    
+    # Build the name
+    meta = report_view_model.get("meta", {})
+    ext_name = extension_name or meta.get("name", "This extension")
+    
+    # Try LLM-powered generation first
+    try:
+        prompts = get_prompts("summary_generation")
+        template_str = prompts.get("consumer_summary_unified")
+        
+        if template_str:
+            # Gather findings from all layers
+            security_findings = []
+            privacy_findings = []
+            governance_findings = []
+            
+            # From layer_details
+            for layer_name, layer_data in layer_details.items():
+                if not isinstance(layer_data, dict):
+                    continue
+                key_points = layer_data.get("key_points", [])
+                if layer_name == "security":
+                    security_findings.extend([p for p in key_points if p])
+                elif layer_name == "privacy":
+                    privacy_findings.extend([p for p in key_points if p])
+                elif layer_name == "governance":
+                    governance_findings.extend([p for p in key_points if p])
+            
+            # From scoring factors
+            if scoring_v2:
+                for layer in scoring_v2.get("layers", {}).values():
+                    if isinstance(layer, dict):
+                        for factor in layer.get("factors", []):
+                            if isinstance(factor, dict) and factor.get("severity", 0) >= 0.3:
+                                finding = factor.get("name", "")
+                                details = factor.get("details", {})
+                                if isinstance(details, dict):
+                                    desc = details.get("description", "")
+                                    if desc:
+                                        finding = f"{finding}: {desc}"
+                                # Add to appropriate layer
+                                layer_name = layer.get("name", "").lower()
+                                if "security" in layer_name:
+                                    security_findings.append(finding)
+                                elif "privacy" in layer_name:
+                                    privacy_findings.append(finding)
+                                elif "governance" in layer_name:
+                                    governance_findings.append(finding)
+            
+            # Permissions summary
+            permissions_data = {
+                "all_permissions": [],
+                "high_risk": [],
+                "host_access": host_access.get("host_scope_label", "NONE"),
+            }
+            if manifest:
+                permissions_data["all_permissions"] = manifest.get("permissions", []) + manifest.get("host_permissions", [])
+            if analysis_results:
+                perm_analysis = analysis_results.get("permissions_analysis", {})
+                permissions_data["high_risk"] = perm_analysis.get("high_risk", []) or perm_analysis.get("highRiskPermissions", [])
+            
+            # Create prompt
+            template = PromptTemplate.from_template(template_str)
+            template = template.partial(
+                extension_name=ext_name,
+                score=score,
+                score_label=score_label,
+                host_access_summary_json=json.dumps(host_access, indent=2),
+                permissions_json=json.dumps(permissions_data, indent=2),
+                security_findings_json=json.dumps(security_findings[:5], indent=2),
+                privacy_findings_json=json.dumps(privacy_findings[:5], indent=2),
+                governance_findings_json=json.dumps(governance_findings[:5], indent=2),
+            )
+            
+            model_name = os.getenv("LLM_MODEL", "gpt-4o")
+            model_parameters = {"temperature": 0.3, "max_tokens": 1024}
+            
+            formatted_prompt = template.format_prompt()
+            messages = formatted_prompt.to_messages()
+            
+            response = invoke_with_fallback(
+                messages=messages,
+                model_name=model_name,
+                model_parameters=model_parameters,
+            )
+            
+            parser = JsonOutputParser()
+            result = parser.parse(response.content if hasattr(response, "content") else str(response))
+            
+            if isinstance(result, dict) and result.get("headline") and result.get("tldr"):
+                # Validate tone matches score
+                headline_lower = result.get("headline", "").lower()
+                if score_label == "LOW RISK" and any(x in headline_lower for x in ["high risk", "dangerous", "avoid"]):
+                    raise ValueError("Headline contradicts LOW RISK score")
+                if score_label == "HIGH RISK" and any(x in headline_lower for x in ["safe", "low risk", "no concerns"]):
+                    raise ValueError("Headline contradicts HIGH RISK score")
+                
+                logger.info("Unified consumer summary generated via LLM")
+                return {
+                    "headline": result.get("headline", ""),
+                    "tldr": result.get("tldr", ""),
+                    "concerns": result.get("concerns", [])[:3],
+                    "recommendation": result.get("recommendation", ""),
+                    "source": "llm",
+                }
+    except Exception as exc:
+        logger.warning("LLM unified consumer summary failed, using fallback: %s", exc)
+    
+    # Fallback: deterministic summary
+    return _fallback_unified_consumer_summary(
+        score=score,
+        score_label=score_label,
+        host_access=host_access,
+        capability_flags=capability_flags,
+        layer_details=layer_details,
+        highlights=highlights,
+        extension_name=ext_name,
+    )
+
+
+def _fallback_unified_consumer_summary(
+    score: int,
+    score_label: str,
+    host_access: Dict[str, Any],
+    capability_flags: Dict[str, Any],
+    layer_details: Dict[str, Any],
+    highlights: Dict[str, Any],
+    extension_name: str,
+) -> Dict[str, Any]:
+    """
+    Deterministic fallback for unified consumer summary.
+    Uses plain English and avoids technical jargon.
+    """
+    host_scope = host_access.get("host_scope_label", "NONE")
+    
+    # Headline based on score
+    if score_label == "HIGH RISK":
+        headline = f"Be careful — {extension_name} has significant security concerns."
+    elif score_label == "MEDIUM RISK":
+        headline = f"Review before installing — {extension_name} needs some attention."
+    else:
+        headline = f"{extension_name} appears safe for general use."
+    
+    # Truncate headline to 100 chars
+    if len(headline) > 100:
+        headline = headline[:97] + "..."
+    
+    # TL;DR based on findings
+    tldr_parts = []
+    
+    if host_scope == "ALL_WEBSITES":
+        tldr_parts.append("This extension runs on all websites you visit.")
+    elif host_scope == "MULTI_DOMAIN":
+        tldr_parts.append("This extension runs on multiple specific websites.")
+    
+    if capability_flags.get("can_read_cookies"):
+        tldr_parts.append("It can read your cookies.")
+    if capability_flags.get("can_read_history"):
+        tldr_parts.append("It can see your browsing history.")
+    if capability_flags.get("can_block_or_modify_network"):
+        tldr_parts.append("It can see and modify your web traffic.")
+    
+    if not tldr_parts:
+        if score_label == "LOW RISK":
+            tldr_parts.append("No major concerns were found during the security scan.")
+        elif score_label == "MEDIUM RISK":
+            tldr_parts.append("Some permissions and behaviors need review before installing.")
+        else:
+            tldr_parts.append("Several issues were found that may put your data at risk.")
+    
+    tldr = " ".join(tldr_parts[:3])
+    if len(tldr) > 300:
+        tldr = tldr[:297] + "..."
+    
+    # Concerns - gather from layer details
+    concerns = []
+    for layer_name in ("security", "privacy", "governance"):
+        ld = layer_details.get(layer_name, {})
+        if isinstance(ld, dict):
+            key_points = ld.get("key_points", [])
+            for kp in key_points:
+                if kp and isinstance(kp, str) and kp.strip() and kp not in concerns:
+                    concerns.append(kp)
+                    if len(concerns) >= 3:
+                        break
+        if len(concerns) >= 3:
+            break
+    
+    # Fallback concerns from highlights
+    if not concerns:
+        why_this_score = highlights.get("why_this_score", [])
+        if isinstance(why_this_score, list):
+            concerns = [str(r) for r in why_this_score if r and str(r).strip()][:3]
+    
+    # Recommendation
+    if score_label == "HIGH RISK":
+        recommendation = "Consider using an alternative extension with fewer permissions."
+    elif score_label == "MEDIUM RISK":
+        recommendation = "Check the permissions carefully and avoid using on sensitive websites."
+    else:
+        recommendation = "Keep the extension updated and review after major version changes."
+    
+    return {
+        "headline": headline,
+        "tldr": tldr,
+        "concerns": concerns[:3],
+        "recommendation": recommendation,
+        "source": "fallback",
     }
 
 
@@ -1305,6 +1561,18 @@ def build_report_view_model(
     report_view_model["consumer_summary"] = build_consumer_summary(
         report_view_model=report_view_model,
         scoring_v2=scoring_v2_for_summary,
+    )
+
+    # -------------------------------------------------------------------------
+    # Unified Consumer Summary (NEW: simplified format with LLM plain English)
+    # headline + tldr + concerns + recommendation
+    # -------------------------------------------------------------------------
+    report_view_model["unified_summary"] = build_unified_consumer_summary(
+        report_view_model=report_view_model,
+        scoring_v2=scoring_v2_for_summary,
+        analysis_results=analysis_results,
+        manifest=manifest,
+        extension_name=manifest.get("name") or metadata.get("title") or metadata.get("name"),
     )
 
     return report_view_model
