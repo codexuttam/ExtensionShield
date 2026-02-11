@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useScan } from "../context/ScanContext";
 import SEOHead from "../components/SEOHead";
 import "./HomePage.scss";
 
@@ -23,6 +24,7 @@ const SCAN_STATUS_MESSAGES = [
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const { startScan, setUrl } = useScan();
   const [isVisible, setIsVisible] = useState(false);
   const [scanInput, setScanInput] = useState("");
   const [scanProgress, setScanProgress] = useState(0);
@@ -265,10 +267,15 @@ const HomePage = () => {
   }, [initializeBadges, animate]);
 
   const handleScan = () => {
-    if (scanInput.trim()) {
-      navigate('/scanner', { state: { prefillUrl: scanInput.trim() } });
+    const input = scanInput.trim();
+    if (input) {
+      // Clear context URL so /scan page starts clean, then trigger scan directly.
+      // startScan navigates to /scan/progress/:id → user clicks "View Results" → /scan/results/:id
+      setScanInput("");
+      setUrl("");
+      startScan(input);
     } else {
-      navigate('/scanner');
+      navigate('/scan');
     }
   };
 
@@ -928,7 +935,7 @@ const HomePage = () => {
                 <span>AI threat analysis + VirusTotal/threat intel</span>
               </li>
             </ul>
-            <button className="pricing-btn popular-btn" onClick={() => navigate("/scanner")}>Start Free</button>
+            <button className="pricing-btn popular-btn" onClick={() => navigate("/scan")}>Start Free</button>
           </div>
 
           {/* Enterprise Plan */}
