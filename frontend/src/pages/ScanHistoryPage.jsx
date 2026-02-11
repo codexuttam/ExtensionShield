@@ -149,8 +149,6 @@ const ScanHistoryPage = () => {
     return () => clearTimeout(t);
   }, [searchTerm]);
 
-  const getIconSrc = (extensionId) => getExtensionIconUrl(extensionId);
-
   useEffect(() => {
     let isMounted = true;
     
@@ -366,8 +364,13 @@ const ScanHistoryPage = () => {
 
   const totalPages = Math.ceil(filteredScans.length / rowsPerPage);
 
-  // Actions
+  // Actions: require sign-in before viewing report (then redirect to report after auth)
   const handleViewReport = (extId) => {
+    if (!isAuthenticated) {
+      sessionStorage.setItem("auth:returnTo", `/scan/results/${extId}`);
+      openSignInModal();
+      return;
+    }
     navigate(`/scan/results/${extId}`);
   };
 
@@ -564,7 +567,7 @@ const ScanHistoryPage = () => {
                       <td className="extension-cell">
                         <div className="extension-info">
                           <img
-                            src={getIconSrc(scan.extension_id)}
+                            src={getExtensionIconUrl(scan.extension_id)}
                             alt={scan.extension_name}
                             className="extension-icon"
                             onError={(e) => {

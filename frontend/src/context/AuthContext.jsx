@@ -75,6 +75,18 @@ export const AuthProvider = ({ children }) => {
             logger.log("User signed in successfully");
             setIsSignInModalOpen(false);
             setAuthError(null);
+            // Redirect to returnTo when user signed in from modal (e.g. View report flow)
+            // Skip when we're on OAuth callback page (it handles redirect itself)
+            if (typeof window !== "undefined" && window.location.pathname !== "/auth/callback") {
+              const returnTo = sessionStorage.getItem("auth:returnTo");
+              if (returnTo) {
+                sessionStorage.removeItem("auth:returnTo");
+                const validated = validateReturnTo(returnTo);
+                if (validated !== "/") {
+                  window.location.href = validated;
+                }
+              }
+            }
           }
           
           // Handle token refresh - update API client

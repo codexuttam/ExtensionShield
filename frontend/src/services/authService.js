@@ -30,16 +30,18 @@ const checkSupabaseConfig = () => {
 const signInWithGoogle = async () => {
   checkSupabaseConfig();
   
-  // Store the return URL (pathname + search) before redirecting
-  // This preserves the page and query params the user was on
+  // Store the return URL: use existing (e.g. set by View report button) or current page
   // Use sessionStorage for tab-isolation (prevents cross-tab interference)
   // Validate to prevent open redirects and loops
-  const returnTo = validateReturnTo(window.location.pathname + window.location.search);
+  const existingReturnTo = sessionStorage.getItem("auth:returnTo");
+  const returnTo = validateReturnTo(
+    existingReturnTo || window.location.pathname + window.location.search
+  );
   sessionStorage.setItem("auth:returnTo", returnTo);
-  
+
   // Redirect to dedicated callback route (PKCE flow)
   const callbackUrl = `${window.location.origin}/auth/callback`;
-  
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
@@ -64,16 +66,16 @@ const signInWithGoogle = async () => {
 const signInWithGitHub = async () => {
   checkSupabaseConfig();
   
-  // Store the return URL (pathname + search) before redirecting
-  // This preserves the page and query params the user was on
-  // Use sessionStorage for tab-isolation (prevents cross-tab interference)
-  // Validate to prevent open redirects and loops
-  const returnTo = validateReturnTo(window.location.pathname + window.location.search);
+  // Store the return URL: use existing (e.g. set by View report button) or current page
+  const existingReturnTo = sessionStorage.getItem("auth:returnTo");
+  const returnTo = validateReturnTo(
+    existingReturnTo || window.location.pathname + window.location.search
+  );
   sessionStorage.setItem("auth:returnTo", returnTo);
-  
+
   // Redirect to dedicated callback route (PKCE flow)
   const callbackUrl = `${window.location.origin}/auth/callback`;
-  
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "github",
     options: {

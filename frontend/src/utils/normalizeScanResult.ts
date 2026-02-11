@@ -763,11 +763,10 @@ export function normalizeScanResult(raw: RawScanResult): ReportViewModel {
     riskLevel?: string;
   };
   
-  // Build meta information (iconUrl: relative path for /api/scan/icon - component may prepend baseURL)
+  // Build meta information (icon URL: use getExtensionIconUrl(extensionId) at display time)
   const meta: MetaVM = {
     extensionId,
     name: raw.extension_name || formatted.name || raw.metadata?.title || raw.manifest?.name || 'Unknown Extension',
-    iconUrl: `/api/scan/icon/${extensionId}`,
     version: raw.metadata?.version || raw.manifest?.version || formatted.version,
     updatedAt: raw.metadata?.last_updated,
     users: raw.metadata?.user_count,

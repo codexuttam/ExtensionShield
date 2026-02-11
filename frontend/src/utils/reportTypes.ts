@@ -574,11 +574,10 @@ export interface RawReportViewModel {
   consumer_insights?: ConsumerInsights;
 }
 
-/** Meta information */
+/** Meta information. Use getExtensionIconUrl(meta.extensionId) for icon display. */
 export interface MetaVM {
   extensionId: string;
   name: string;
-  iconUrl?: string;
   version?: string;
   updatedAt?: string;
   users?: number;

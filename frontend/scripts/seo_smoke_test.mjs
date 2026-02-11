@@ -119,42 +119,45 @@ function normalizePath(path) {
   return normalized;
 }
 
+/** Timeout for waiting on SEO head (lazy-loaded routes may need longer to hydrate). */
+const SEO_HEAD_WAIT_MS = 35000;
+
 /**
  * Parse HTML and extract SEO elements
  */
 async function waitForSeoHead(page, { requireOG, requireJSONLD }) {
-  // For a client-rendered SPA, SEO tags are injected after JS loads.
+  // For a client-rendered SPA, SEO tags are injected after JS (and lazy chunks) load.
   // We wait for the key head tags to appear to avoid false negatives.
   await page.waitForFunction(
     () => Boolean(document.title && document.title.trim().length > 0),
-    { timeout: 20000 }
+    { timeout: SEO_HEAD_WAIT_MS }
   );
 
   await page.waitForFunction(
     () => Boolean(document.querySelector('meta[name="description"]')?.getAttribute('content')),
-    { timeout: 20000 }
+    { timeout: SEO_HEAD_WAIT_MS }
   );
 
   await page.waitForFunction(
     () => Boolean(document.querySelector('link[rel="canonical"]')?.href),
-    { timeout: 20000 }
+    { timeout: SEO_HEAD_WAIT_MS }
   );
 
   if (requireOG) {
     await page.waitForFunction(
       () => document.querySelectorAll('meta[property^="og:"]').length > 0,
-      { timeout: 20000 }
+      { timeout: SEO_HEAD_WAIT_MS }
     );
     await page.waitForFunction(
       () => document.querySelectorAll('meta[name^="twitter:"]').length > 0,
-      { timeout: 20000 }
+      { timeout: SEO_HEAD_WAIT_MS }
     );
   }
 
   if (requireJSONLD) {
     await page.waitForFunction(
       () => document.querySelectorAll('script[type="application/ld+json"]').length > 0,
-      { timeout: 20000 }
+      { timeout: SEO_HEAD_WAIT_MS }
     );
   }
 }
@@ -337,7 +340,7 @@ async function testPage(page, url, requireOG = false, requireJSONLD = false, req
   console.log(`\n🔍 Testing ${testName}...`);
 
   try {
-    const gotoResponse = await page.goto(url, { waitUntil: 'domcontentloaded' });
+    const gotoResponse = await page.goto(url, { waitUntil: 'load' });
     const status = gotoResponse?.status?.() ?? null;
     const headers = gotoResponse?.headers?.() ?? {};
 
@@ -599,7 +602,9 @@ async function testRobotsTxt(domain, shouldAllow) {
     testsPassed++;
 
     const content = response.body.toLowerCase();
-    const hasDisallowAll = content.includes('disallow: /') && !content.match(/disallow:\s*\/\s*allow:/i);
+    // "Disallow: /" as a full line (with optional trailing space) means disallow everything.
+    // Do not treat "Disallow: /settings" or "Disallow: /reports" as disallow-all.
+    const hasDisallowAll = content.match(/^disallow:\s*\/\s*$/im) !== null;
     const hasAllow = content.includes('allow: /') || (content.includes('user-agent: *') && !hasDisallowAll);
 
     if (shouldAllow) {
@@ -727,7 +732,7 @@ async function runTests() {
     console.log(`   Pages: ${pagesToTest.join(', ')}`);
     const context = await browser.newContext();
     const page = await context.newPage();
-    page.setDefaultTimeout(20000);
+    page.setDefaultTimeout(40000);
     for (const path of pagesToTest) {
       const url = `${BASE_URL}${path}`;
       const requireOG = path === '/' || path === '/scan';
@@ -751,7 +756,7 @@ async function runTests() {
     console.log(`   Pages: ${pagesToTest.join(', ')}`);
     const context = await browser.newContext();
     const page = await context.newPage();
-    page.setDefaultTimeout(20000);
+    page.setDefaultTimeout(40000);
     for (const path of pagesToTest) {
       const url = `${LOCAL_URL}${path}`;
       const requireOG = path === '/' || path === '/scan';

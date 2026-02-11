@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import EnhancedUrlInput from "../../components/EnhancedUrlInput";
 import { useScan } from "../../context/ScanContext";
 import databaseService from "../../services/databaseService";
@@ -166,6 +167,7 @@ const RowActions = ({ scan, onViewReport, onMonitor, onCopyLink, showActions }) 
 const ScannerPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated, openSignInModal } = useAuth();
   const {
     url,
     setUrl,
@@ -175,9 +177,6 @@ const ScannerPage = () => {
     startScan,
     handleFileUpload,
   } = useScan();
-
-  // Helper: icon URL from API (same-origin or VITE_API_URL); placeholder used on error
-  const getIconSrc = (extensionId) => getExtensionIconUrl(extensionId);
 
   const [allScans, setAllScans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -461,8 +460,13 @@ const ScannerPage = () => {
 
   const totalPages = Math.ceil(allScans.length / rowsPerPage);
 
-  // Actions
+  // Actions: require sign-in before viewing report (then redirect to report after auth)
   const handleViewReport = (extId) => {
+    if (!isAuthenticated) {
+      sessionStorage.setItem("auth:returnTo", `/scan/results/${extId}`);
+      openSignInModal();
+      return;
+    }
     navigate(`/scan/results/${extId}`);
   };
 
@@ -692,7 +696,7 @@ const ScannerPage = () => {
                         <td className="extension-cell">
                           <div className="extension-info">
                             <img
-                              src={getIconSrc(scan.extension_id)}
+                              src={getExtensionIconUrl(scan.extension_id)}
                               alt={scan.extension_name}
                               className="extension-icon"
                               onError={(e) => {
