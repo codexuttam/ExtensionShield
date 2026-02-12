@@ -177,7 +177,7 @@
   --atlas-text-primary: #0f172a;
   --atlas-text-secondary: #475569;
   --atlas-text-muted: #64748b;
-  --atlas-border: rgba(15, 23, 42, 0.1);
+  --atlas-border: rgba(17, 24, 39, 0.1);
 }
 
 .light html {
@@ -198,22 +198,22 @@
 }
 
 .light ::-webkit-scrollbar-thumb {
-  background: rgba(15, 23, 42, 0.2);
+  background: rgba(17, 24, 39, 0.2);
   border: 2px solid #f1f5f9;
 }
 
 .light ::-webkit-scrollbar-thumb:hover {
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(17, 24, 39, 0.3);
 }
 
 .light .glass {
   background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(15, 23, 42, 0.1);
+  border: 1px solid rgba(17, 24, 39, 0.1);
 }
 
 .light .glass-strong {
   background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(15, 23, 42, 0.15);
+  border: 1px solid rgba(17, 24, 39, 0.15);
 }
 
 @theme {

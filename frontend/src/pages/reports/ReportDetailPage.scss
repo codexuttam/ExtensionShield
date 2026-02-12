@@ -254,7 +254,7 @@
   align-items: center;
   gap: 2rem;
   padding: 1.75rem 2.5rem;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(17, 24, 39, 0.5);
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-radius: 20px;
   margin-bottom: 1.25rem;
@@ -335,7 +335,7 @@
 .info-popup {
   width: 340px;
   max-width: 90vw;
-  background: rgba(15, 23, 42, 0.98);
+  background: rgba(17, 24, 39, 0.98);
   border: 1px solid rgba(148, 163, 184, 0.15);
   border-radius: 16px;
   padding: 1.5rem;
@@ -465,7 +465,7 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(17, 24, 39, 0.3);
   border-radius: 8px;
   margin-top: 0.25rem;
 }
@@ -530,7 +530,7 @@
   gap: 2rem;
   margin-bottom: 2.5rem;
   padding: 2rem;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(17, 24, 39, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-radius: 16px;
 }
@@ -641,14 +641,14 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem 1.25rem;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(17, 24, 39, 0.5);
   border: 1px solid rgba(148, 163, 184, 0.08);
   border-radius: 12px;
   transition: all 0.2s ease;
 
   &:hover {
     border-color: rgba(148, 163, 184, 0.15);
-    background: rgba(15, 23, 42, 0.7);
+    background: rgba(17, 24, 39, 0.7);
   }
 }
 
@@ -735,7 +735,7 @@
   border: 1px solid;
 
   &.inactive {
-    background: rgba(15, 23, 42, 0.3);
+    background: rgba(17, 24, 39, 0.3);
     border-color: rgba(148, 163, 184, 0.08);
     opacity: 0.5;
   }
@@ -801,7 +801,7 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(17, 24, 39, 0.5);
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-radius: 10px;
   transition: all 0.2s ease;
@@ -837,14 +837,14 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.875rem;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(17, 24, 39, 0.5);
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-radius: 20px;
   font-size: 0.8rem;
   transition: all 0.2s ease;
 
   &:hover {
-    background: rgba(15, 23, 42, 0.7);
+    background: rgba(17, 24, 39, 0.7);
     border-color: rgba(148, 163, 184, 0.2);
   }
 
@@ -967,7 +967,7 @@
   cursor: pointer;
   transition: all 0.25s ease;
   position: relative;
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(17, 24, 39, 0.3);
   border: 1px solid transparent;
   
   &::after {
@@ -1041,14 +1041,14 @@
    SUMMARY TAB
    ============================================================================ */
 .content-card {
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(17, 24, 39, 0.4);
   border: 1px solid rgba(148, 163, 184, 0.08);
   border-radius: 20px;
   transition: all 0.3s ease;
   
   &:hover {
     border-color: rgba(148, 163, 184, 0.12);
-    background: rgba(15, 23, 42, 0.5);
+    background: rgba(17, 24, 39, 0.5);
     transform: translateY(-1px);
   }
 }
@@ -1088,7 +1088,7 @@
 
 /* Risk Breakdown */
 .risk-breakdown {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(17, 24, 39, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-radius: 12px;
   padding: 1.5rem;
@@ -1151,7 +1151,7 @@
    SECURITY TAB
    ============================================================================ */
 .security-checks {
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(17, 24, 39, 0.3);
   border: 1px solid rgba(148, 163, 184, 0.05);
   border-radius: 20px;
   padding: 2rem;
@@ -1176,14 +1176,14 @@
   gap: 1rem;
   padding: 1rem 1.25rem;
   border-radius: 12px;
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(17, 24, 39, 0.4);
   border: 1px solid rgba(148, 163, 184, 0.06);
   transition: all 0.2s ease;
   
   &:hover {
     transform: translateX(2px);
     border-color: rgba(148, 163, 184, 0.12);
-    background: rgba(15, 23, 42, 0.5);
+    background: rgba(17, 24, 39, 0.5);
   }
 
   &.pass,
@@ -1217,7 +1217,7 @@
 
 /* Findings Section */
 .findings-section {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(17, 24, 39, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-radius: 12px;
   padding: 1.5rem;
@@ -1340,14 +1340,14 @@
   align-items: center;
   gap: 1rem;
   padding: 0.875rem 1rem;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(17, 24, 39, 0.5);
   border: 1px solid rgba(148, 163, 184, 0.08);
   border-radius: 8px;
   transition: all 0.15s ease;
 
   &:hover {
     border-color: rgba(148, 163, 184, 0.15);
-    background: rgba(15, 23, 42, 0.7);
+    background: rgba(17, 24, 39, 0.7);
   }
 }
 
@@ -1390,7 +1390,7 @@
 }
 
 .more-files {
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(17, 24, 39, 0.3);
   border-radius: 8px;
 }
 
@@ -1486,7 +1486,7 @@
   flex-direction: column;
   gap: 0.75rem;
   padding: 1.5rem 1.75rem;
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(17, 24, 39, 0.4);
   border: 1px solid rgba(148, 163, 184, 0.08);
   border-radius: 16px;
 }
@@ -1515,7 +1515,7 @@
   flex-direction: column;
   gap: 0.75rem;
   padding: 1.5rem;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(17, 24, 39, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-radius: 12px;
 }
@@ -1723,7 +1723,7 @@
    VERSION HISTORY SECTION
    ============================================================================ */
 .version-history-section {
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(17, 24, 39, 0.4);
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-radius: 16px;
   padding: 2rem;

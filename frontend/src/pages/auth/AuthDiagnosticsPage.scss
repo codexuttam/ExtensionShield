@@ -1,7 +1,7 @@
 .auth-diagnostics-page {
   min-height: 100vh;
   padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--atlas-bg-primary, #0d1424);
 }
 
 .auth-diagnostics-container {

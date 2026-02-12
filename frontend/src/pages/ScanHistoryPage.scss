@@ -200,7 +200,7 @@
   padding: 0.75rem 1rem 0.75rem 2.75rem;
   font-size: 0.875rem;
   font-family: inherit;
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(17, 24, 39, 0.8);
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 12px;
   color: var(--atlas-text-primary, #f8fafc);
@@ -215,7 +215,7 @@
 .search-input:focus {
   outline: none;
   border-color: rgba(34, 197, 94, 0.5);
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(17, 24, 39, 0.95);
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
 }
 
@@ -285,7 +285,7 @@
   align-items: center;
   gap: 1.5rem;
   padding: 3rem 4rem;
-  background: rgba(15, 23, 42, 0.98);
+  background: rgba(17, 24, 39, 0.98);
   border: 1px solid rgba(34, 197, 94, 0.3);
   border-radius: 20px;
   box-shadow: 
@@ -376,7 +376,7 @@
 }
 
 .table-wrapper {
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(17, 24, 39, 0.4);
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-radius: 16px;
   overflow: hidden;
@@ -398,12 +398,12 @@
 
   &::before {
     left: 0;
-    background: linear-gradient(to right, rgba(15, 23, 42, 0.8), transparent);
+    background: linear-gradient(to right, rgba(17, 24, 39, 0.8), transparent);
   }
 
   &::after {
     right: 0;
-    background: linear-gradient(to left, rgba(15, 23, 42, 0.8), transparent);
+    background: linear-gradient(to left, rgba(17, 24, 39, 0.8), transparent);
   }
 
   &.show-left-shadow::before {
@@ -809,7 +809,7 @@
 }
 
 .pagination-btn {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(17, 24, 39, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-radius: 6px;
   padding: 0.5rem 0.75rem;
@@ -849,7 +849,7 @@
   }
 
   select {
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(17, 24, 39, 0.6);
     border: 1px solid rgba(148, 163, 184, 0.1);
     border-radius: 6px;
     padding: 0.5rem 0.75rem;
@@ -880,7 +880,7 @@
   justify-content: center;
   padding: 5rem 2rem;
   text-align: center;
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(17, 24, 39, 0.3);
   border: 1px dashed rgba(148, 163, 184, 0.15);
   border-radius: 16px;
   width: 100%;
@@ -1010,7 +1010,7 @@
     }
 
     &::-webkit-scrollbar-track {
-      background: rgba(15, 23, 42, 0.4);
+      background: rgba(17, 24, 39, 0.4);
       border-radius: 4px;
     }
 
@@ -1115,7 +1115,7 @@
           min-width: 180px;
           position: sticky;
           left: 0;
-          background: rgba(15, 23, 42, 0.95);
+          background: rgba(17, 24, 39, 0.95);
           z-index: 1;
 
           &::after {
