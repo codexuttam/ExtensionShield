@@ -79,7 +79,7 @@
   font-size: 1.5rem;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.95);
-  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
   letter-spacing: -0.02em;
   
   &--small {

@@ -11,7 +11,7 @@
   padding: 0 64px 64px;
   background: var(--atlas-bg-primary, #030712);
   color: var(--atlas-text-primary, #f8fafc);
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
   position: relative;
   overflow-x: hidden;
 }

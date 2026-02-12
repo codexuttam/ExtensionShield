@@ -36,7 +36,7 @@
 }
 
 .dial-score {
-  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  font-family: var(--font-mono);
   font-size: 3rem;
   font-weight: 700;
   line-height: 1;

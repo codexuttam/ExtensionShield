@@ -4,7 +4,7 @@
   color: var(--atlas-text-primary);
   position: relative;
   overflow: hidden;
-  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .enterprise-bg {

@@ -75,7 +75,7 @@
     font-weight: 600;
     
     &.redacted {
-      font-family: monospace;
+      font-family: var(--font-mono);
       color: #4a5568;
     }
   }

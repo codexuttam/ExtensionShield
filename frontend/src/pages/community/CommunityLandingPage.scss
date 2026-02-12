@@ -9,7 +9,7 @@
   color: var(--atlas-text-primary, #f8fafc);
   position: relative;
   overflow: hidden;
-  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
 }
 
 /* ---------- Animated background ---------- */

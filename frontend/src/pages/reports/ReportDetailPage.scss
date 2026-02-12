@@ -10,7 +10,7 @@
   padding: 0 64px 64px;
   background: var(--atlas-bg-primary, #030712);
   color: var(--atlas-text-primary, #f8fafc);
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
   position: relative;
   overflow-x: hidden;
 }
@@ -203,7 +203,7 @@
   color: rgba(148, 163, 184, 0.8);
   padding: 0.4rem 0.75rem;
   border-radius: 6px;
-  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   letter-spacing: 0.01em;
   border: 1px solid rgba(148, 163, 184, 0.12);
@@ -1842,7 +1842,7 @@
   font-size: 0.8125rem;
   font-weight: 600;
   color: #a78bfa;
-  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-family: var(--font-mono);
 }
 
 .latest-badge {
@@ -2078,7 +2078,7 @@
     }
 
     code {
-      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-family: var(--font-mono);
       font-size: 0.875rem;
       color: #22d3ee;
       background: rgba(34, 211, 238, 0.1);
@@ -2162,7 +2162,7 @@
       background: #0a0f1a;
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 0.5rem;
-      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-family: var(--font-mono);
       font-size: 0.75rem;
       line-height: 1.5;
       color: #94a3b8;

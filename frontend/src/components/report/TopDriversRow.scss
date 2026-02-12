@@ -48,7 +48,7 @@
 }
 
 .driver-contribution {
-  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.7rem;
   color: rgba(34, 211, 238, 0.9);
   background: rgba(34, 211, 238, 0.08);

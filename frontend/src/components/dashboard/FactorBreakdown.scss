@@ -96,7 +96,7 @@
   font-weight: 700;
   min-width: 28px;
   text-align: right;
-  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-family: var(--font-mono);
 }
 
 .factor-flags {
@@ -150,6 +150,6 @@
   position: absolute;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.9);
-  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-family: var(--font-mono);
 }
 

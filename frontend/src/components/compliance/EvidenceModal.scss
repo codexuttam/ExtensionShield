@@ -131,7 +131,7 @@
     border-radius: 0.375rem;
     border: 1px solid rgba(59, 130, 246, 0.2);
     color: #60a5fa;
-    font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+    font-family: var(--font-mono);
   }
 }
 
@@ -159,7 +159,7 @@
 
 .artifact-value {
   color: #ffffff;
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
   font-size: 0.8125rem;
   background: rgba(59, 130, 246, 0.1);
   padding: 0.25rem 0.5rem;
@@ -224,7 +224,7 @@
 
   code {
     color: #e2e8f0;
-    font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+    font-family: var(--font-mono);
     font-size: 0.8125rem;
     line-height: 1.6;
     white-space: pre-wrap;
@@ -258,7 +258,7 @@
   color: #ffffff;
 
   &.hash {
-    font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+    font-family: var(--font-mono);
     color: #60a5fa;
   }
 }

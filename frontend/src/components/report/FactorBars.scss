@@ -75,7 +75,7 @@
   padding: 2px 6px;
   font-size: 0.625rem;
   font-weight: 600;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   border-radius: 3px;
@@ -130,13 +130,13 @@
 }
 
 .severity-value {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 600;
 }
 
 .contribution-value {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
   color: rgba(248, 250, 252, 0.4);
 }

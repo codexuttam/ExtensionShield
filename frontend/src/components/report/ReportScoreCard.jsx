@@ -145,6 +145,16 @@ const ReportScoreCard = ({
           ))}
         </div>
       )}
+
+      {/* Click affordance - always visible on clickable cards */}
+      {onClick && (
+        <div className="score-card-click-hint">
+          <span>View details</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      )}
     </div>
   );
 };
