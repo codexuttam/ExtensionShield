@@ -181,8 +181,7 @@ function OrbitIcon({ scan, depth, isSelected, isHovered, interactive = true, com
   const counterRotateX = depth?.counterRotateX ?? 0;
   const offsetY = depth?.offsetY ?? 0;
   const shadowDepth = depth?.shadowDepth ?? 0;
-  const status = getOverallStatus(scan);
-  const statusLabel = status === "safe" ? "Safe" : status === "warning" ? "Review" : "Risk";
+  const tooltipLabel = scan?.name || "Preview";
 
   const style = compact
     ? undefined
@@ -203,9 +202,7 @@ function OrbitIcon({ scan, depth, isSelected, isHovered, interactive = true, com
       </div>
       {interactive && isHovered && opacity >= 0.6 && (
         <div className="hero-orbit-icon__tooltip">
-          <span className="tooltip-name">{scan?.name || "Extension"}</span>
-          <span className={`tooltip-status tooltip-status--${status}`}>{statusLabel}</span>
-          <span className="tooltip-cta">Click to view report</span>
+          <span className="tooltip-name">{tooltipLabel}</span>
         </div>
       )}
     </>
@@ -517,14 +514,22 @@ export default function HeroOrbitalCarousel() {
 
         {!cardRevealed && (
           <motion.div
-            className="hero-orbital-cta"
+            className="hero-orbital-cta-wrap"
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: "easeOut" }}
             aria-hidden="true"
           >
-            <span className="hero-orbital-cta__dot" />
-            <span className="hero-orbital-cta__label">Click an extension</span>
+            <button
+              type="button"
+              className="hero-orbital-cta"
+              onClick={() => handleSelect(0)}
+              aria-label="Try an example — opens a preview"
+            >
+              <span className="hero-orbital-cta__dot" />
+              <span className="hero-orbital-cta__label">Try an example</span>
+            </button>
+            <p className="hero-orbital-cta__helper">Or click any icon to preview.</p>
           </motion.div>
         )}
       </div>

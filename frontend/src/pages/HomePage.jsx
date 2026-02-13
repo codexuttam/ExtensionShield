@@ -270,7 +270,7 @@ const HomePage = () => {
                 Know what your Chrome extensions can access.
               </h1>
               <p className="hero-subtitle">
-                Paste a Chrome Web Store URL or Extension ID — get a safety report in under 60 seconds.
+                Paste a Chrome Web Store URL — get a safety report in under 60 seconds.
               </p>
 
               <div className="hero-search">
