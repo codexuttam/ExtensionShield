@@ -415,12 +415,13 @@ def governance_node(state: dict) -> Command:
 
 
 def _extract_extension_id(url: str) -> Optional[str]:
-    """Extract extension ID from Chrome Web Store URL."""
+    """Extract extension ID from Chrome Web Store URL. Returns only if it matches ^[a-z]{32}$."""
     import re
-    
+    from extension_shield.utils.extension import is_chrome_extension_id
+
     if not url:
         return None
-    
     match = re.search(r"/detail/(?:[^/]+/)?([a-z]{32})", url)
-    return match.group(1) if match else None
+    candidate = match.group(1) if match else None
+    return candidate if candidate and is_chrome_extension_id(candidate) else None
 
