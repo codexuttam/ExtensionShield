@@ -37,8 +37,7 @@ const RedirectExtensionToScanResults = () => {
   return <Navigate to={`/scan/results/${encodeURIComponent(extensionId || "")}`} replace />;
 };
 
-// Reports (Enterprise)
-const ReportsPage = React.lazy(() => import("../pages/reports/ReportsPage"));
+// Report detail (individual report view)
 const ReportDetailPage = React.lazy(() => import("../pages/reports/ReportDetailPage"));
 
 // Dev / Debug (not in nav)
@@ -267,10 +266,10 @@ export const routes = [
     changefreq: "weekly"
   },
 
-  // ============ REPORTS (ENTERPRISE) ============
+  // ============ REPORTS ============
   {
     path: "/reports",
-    element: <ReportsPage />
+    element: <Navigate to="/scan/history" replace />
   },
   {
     path: "/reports/:reportId",

@@ -4,7 +4,9 @@
 
 .history-page {
   min-height: 100vh;
-  background: transparent;
+  min-width: 100%;
+  width: 100%;
+  background: var(--atlas-bg-primary);
   color: var(--atlas-text-primary, #f8fafc);
   display: flex;
   flex-direction: column;
@@ -1123,6 +1125,42 @@
       background: var(--atlas-accent-subtle);
       border-color: var(--atlas-accent);
       color: var(--atlas-accent-hover);
+    }
+  }
+
+  /* Pagination – match site theme */
+  .table-pagination .pagination-info {
+    color: var(--atlas-text-muted);
+  }
+
+  .pagination-btn {
+    background: var(--atlas-bg-card);
+    border-color: var(--atlas-border);
+    color: var(--atlas-text-secondary);
+
+    &:hover:not(:disabled) {
+      background: var(--atlas-accent-subtle);
+      border-color: var(--atlas-border-accent);
+      color: var(--atlas-text-primary);
+    }
+  }
+
+  .pagination-rows {
+    color: var(--atlas-text-muted);
+
+    select {
+      background: var(--atlas-bg-card);
+      border-color: var(--atlas-border);
+      color: var(--atlas-text-primary);
+
+      &:hover {
+        border-color: var(--atlas-border-accent);
+      }
+
+      &:focus {
+        border-color: var(--atlas-accent);
+        box-shadow: 0 0 0 2px var(--atlas-accent-subtle);
+      }
     }
   }
 

@@ -103,7 +103,7 @@ const ReportViewModelDetail = ({ report, rawScanResult, extensionId, onExportPdf
     <div className="report-detail-page">
       <div className="report-content">
         <div className="report-nav" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Link to="/reports" className="back-link">← Back to Reports</Link>
+          <Link to="/scan/history" className="back-link">← Back to Scan History</Link>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <Button variant="outline" size="sm" onClick={onExportPdf}>
               <Download size={16} />
@@ -757,7 +757,7 @@ const ReportDetailPage = () => {
               <div className="error-icon">⚠️</div>
               <h2>Report Not Found</h2>
               <p>{error}</p>
-              <Button onClick={() => navigate("/reports")}>Back to Reports</Button>
+              <Button onClick={() => navigate("/scan/history")}>Back to Scan History</Button>
             </div>
           </div>
         </div>
@@ -773,7 +773,7 @@ const ReportDetailPage = () => {
         <div className="report-detail-page">
           <div className="report-content">
             <div className="report-nav">
-              <Link to="/reports" className="back-link">← Back to Reports</Link>
+              <Link to="/scan/history" className="back-link">← Back to Scan History</Link>
             </div>
             <ReportDataUnavailable 
               extensionId={reportId}
@@ -781,7 +781,7 @@ const ReportDetailPage = () => {
               error={normalizationError}
             />
             <div className="error-actions">
-              <Button onClick={() => navigate("/reports")}>Back to Reports</Button>
+              <Button onClick={() => navigate("/scan/history")}>Back to Scan History</Button>
               <Button variant="outline" onClick={() => loadReportData(reportId)}>
                 Retry
               </Button>
@@ -817,7 +817,7 @@ const ReportDetailPage = () => {
         <div className="report-content">
           {/* Navigation */}
           <div className="report-nav">
-            <Link to="/reports" className="back-link">← Back to Reports</Link>
+            <Link to="/scan/history" className="back-link">← Back to Scan History</Link>
             <div className="nav-actions">
               <Button variant="outline" size="sm" onClick={() => navigate(`/reports/${reportId}`)}>
                 Full Analysis

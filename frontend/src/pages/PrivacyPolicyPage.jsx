@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import {
   ArrowLeft,
   FileText,
@@ -46,6 +47,7 @@ const SECTION_IDS = {
 };
 
 const PrivacyPolicyPage = () => {
+  const { isAuthenticated } = useAuth();
   const [openSections, setOpenSections] = useState(() => new Set([SECTION_IDS.intro]));
 
   const toggleSection = useCallback((id) => {
@@ -70,10 +72,12 @@ const PrivacyPolicyPage = () => {
       <div className="privacy-policy-page">
       <div className="page-container">
         <div className="page-header">
-          <Link to="/settings" className="back-link">
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Settings</span>
-          </Link>
+          {isAuthenticated && (
+            <Link to="/settings" className="back-link">
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Settings</span>
+            </Link>
+          )}
           <h1 className="page-title">
             <FileText className="w-6 h-6" />
             Privacy Policy
@@ -532,15 +536,16 @@ const PrivacyPolicyPage = () => {
             </div>
           </div>
 
-          {/* Back to Settings */}
-          <div className="back-button-container">
-            <Link to="/settings">
-              <Button variant="outline" className="back-button">
-                <ArrowLeft className="w-4 h-4" />
-                Back to Settings
-              </Button>
-            </Link>
-          </div>
+          {isAuthenticated && (
+            <div className="back-button-container">
+              <Link to="/settings">
+                <Button variant="outline" className="back-button">
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Settings
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

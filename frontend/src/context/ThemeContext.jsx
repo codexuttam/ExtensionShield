@@ -11,8 +11,8 @@ export const useTheme = () => {
   return context;
 };
 
-// Routes that should always use dark mode (except homepage)
-const FORCE_DARK_ROUTES = ["/settings", "/reports"];
+// Routes that should always use dark mode (none - all pages support light/dark)
+const FORCE_DARK_ROUTES = [];
 
 export const ThemeProvider = ({ children }) => {
   const location = useLocation();

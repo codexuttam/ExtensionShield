@@ -114,11 +114,6 @@ export const userMenuItems = [
     path: "/scan/history"
   },
   {
-    icon: "reports",
-    label: "Reports",
-    path: "/reports"
-  },
-  {
     icon: "settings",
     label: "Settings",
     path: "/settings"

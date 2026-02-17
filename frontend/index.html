@@ -37,7 +37,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script>
       (function() {
         var path = typeof window !== 'undefined' && window.location && window.location.pathname;
-        var forceDark = path && (path.startsWith('/settings') || path.startsWith('/reports'));
+        var forceDark = false;
         var theme = forceDark ? 'dark' : (localStorage.getItem('theme') || 'light');
         if (theme === 'light') document.documentElement.classList.add('light');
         else document.documentElement.classList.remove('light');

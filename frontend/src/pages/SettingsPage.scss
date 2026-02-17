@@ -298,3 +298,105 @@
   }
 }
 
+/* ============================================================================
+   Light mode – match site design theme
+   ============================================================================ */
+.light .settings-page {
+  color: var(--atlas-text-primary);
+}
+
+.light .page-title {
+  color: var(--atlas-text-primary);
+
+  svg {
+    color: var(--atlas-accent);
+  }
+}
+
+.light .page-subtitle {
+  color: var(--atlas-text-muted);
+}
+
+.light .beta-notice {
+  background: var(--risk-warn-bg);
+  border-color: var(--risk-warn-border);
+
+  h3 {
+    color: var(--risk-warn);
+  }
+
+  p {
+    color: var(--atlas-text-secondary);
+  }
+}
+
+.light .settings-card {
+  background: var(--atlas-bg-card);
+  border-color: var(--atlas-border);
+  box-shadow: var(--atlas-card-shadow);
+}
+
+.light .settings-card-header {
+  border-bottom-color: var(--atlas-border);
+
+  h2 {
+    color: var(--atlas-text-primary);
+
+    svg {
+      color: var(--atlas-accent);
+    }
+  }
+}
+
+.light .settings-section {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: var(--atlas-border);
+}
+
+.light .section-title {
+  color: var(--atlas-text-primary);
+}
+
+.light .section-description {
+  color: var(--atlas-text-secondary);
+}
+
+.light .section-header svg {
+  color: var(--atlas-accent);
+}
+
+.light .security-option {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: var(--atlas-border);
+
+  &:hover {
+    border-color: var(--atlas-border-accent);
+    background: rgba(255, 255, 255, 0.8);
+  }
+
+  &.active {
+    background: var(--atlas-accent-subtle);
+    border-color: var(--atlas-accent);
+  }
+
+  .option-label span {
+    color: var(--atlas-text-primary);
+  }
+
+  .option-description {
+    color: var(--atlas-text-secondary);
+  }
+}
+
+.light .account-row {
+  border-bottom-color: var(--atlas-border);
+
+  .label {
+    color: var(--atlas-text-secondary);
+  }
+
+  .value {
+    color: var(--atlas-text-primary);
+  }
+}
+

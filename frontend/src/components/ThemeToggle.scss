@@ -37,14 +37,14 @@
 }
 
 .light .theme-toggle {
-  background: rgba(0, 0, 0, 0.04);
-  border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(38, 35, 31, 0.18);
   color: var(--atlas-text-secondary);
 
   &:hover {
     color: var(--atlas-text-primary);
-    background: rgba(0, 0, 0, 0.06);
-    border-color: rgba(0, 0, 0, 0.14);
+    background: rgba(255, 255, 255, 1);
+    border-color: rgba(38, 35, 31, 0.25);
   }
 
   &:focus-visible {
