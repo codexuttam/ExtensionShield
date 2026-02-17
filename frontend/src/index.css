@@ -463,10 +463,21 @@ html.light {
 .light .capability-card,
 .light .report-card,
 .light .glass-card,
-.light .karma-panel {
+.light .karma-panel,
+.light .api-card {
   background: var(--atlas-bg-card);
   border: 1px solid var(--color__clay);
   box-shadow: var(--atlas-card-shadow);
+}
+
+.light .api-card {
+  border-left: 3px solid var(--atlas-accent);
+}
+
+.light .api-card:hover {
+  border-color: var(--atlas-border-accent);
+  border-left-color: var(--atlas-accent);
+  box-shadow: var(--theme-shadow-card-hover);
 }
 
 .light .surface-card {

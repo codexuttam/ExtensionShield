@@ -30,6 +30,7 @@ const BlogPage = React.lazy(() => import("../pages/gsoc/BlogPage"));
 const OpenSourcePage = React.lazy(() => import("../pages/open-source/OpenSourcePage"));
 const CommunityLandingPage = React.lazy(() => import("../pages/community/CommunityLandingPage"));
 const AboutUsPage = React.lazy(() => import("../pages/AboutUsPage"));
+const ApiServicePage = React.lazy(() => import("../pages/resources/ApiServicePage"));
 
 // Redirect /extension/:id to /scan/results/:id (extension route removed)
 const RedirectExtensionToScanResults = () => {
@@ -180,6 +181,19 @@ export const routes = [
       canonical: "/enterprise"
     },
     priority: 0.8,
+    changefreq: "monthly"
+  },
+
+  // ============ RESOURCES (API, Open Source, etc.) ============
+  {
+    path: "/resources/api-service",
+    element: <ApiServicePage />,
+    seo: {
+      title: "API Service: Access & Payload Reference | ExtensionShield",
+      description: "ExtensionShield API as a service: how to access endpoints, request/response payload reference for QA and integration.",
+      canonical: "/resources/api-service"
+    },
+    priority: 0.7,
     changefreq: "monthly"
   },
 

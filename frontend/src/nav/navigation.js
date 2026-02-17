@@ -70,14 +70,20 @@ export const topNavItems = [
 
 /**
  * Mega Menu Configuration
- * Resources dropdown - Open Source, Community, About
+ * Resources dropdown - API Service, Open Source, Community, About
  */
 export const megaMenuConfig = {
   trigger: {
     label: "Resources",
-    matchPaths: ["/open-source", "/community", "/about"]
+    matchPaths: ["/resources", "/open-source", "/community", "/about"]
   },
   items: [
+    {
+      icon: "📡",
+      label: "API Service",
+      description: "API access & payload reference",
+      path: "/resources/api-service"
+    },
     {
       icon: "🌱",
       label: "Open Source",

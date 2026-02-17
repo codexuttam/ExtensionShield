@@ -2097,6 +2097,19 @@ Disallow: /reports
     return Response(content=robots_content, media_type="text/plain")
 
 
+@app.get("/api")
+@app.get("/api/")
+async def api_root():
+    """API root: basic info and pointer to docs. Prevents 'API endpoint not found' when hitting /api or /api/."""
+    return {
+        "api": "ExtensionShield",
+        "docs": "https://extensionshield.com/resources/api-service",
+        "health": "/api/health/db",
+        "scan_trigger": "POST /api/scan/trigger",
+        "scan_results": "GET /api/scan/results/{identifier}",
+    }
+
+
 @app.get("/api/limits/deep-scan")
 async def get_deep_scan_limit(http_request: Request):
     """Return daily deep-scan usage status for the current user/IP."""
