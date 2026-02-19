@@ -18,6 +18,7 @@ import realScanService from "../../services/realScanService";
 import { normalizeScanResultSafe, validateEvidenceIntegrity, gateIdToLayer, extractFindingsByLayer } from "../../utils/normalizeScanResult";
 import { getExtensionIconUrl, EXTENSION_ICON_PLACEHOLDER } from "../../utils/constants";
 import { normalizeExtensionId } from "../../utils/extensionId";
+import { generateSlug } from "../../utils/slug";
 import "./ScanResultsPageV2.scss";
 
 /** True if text is an unresolved Chrome i18n placeholder (e.g. __MSG_appDesc__). */
@@ -81,10 +82,19 @@ const ScanResultsPageV2 = () => {
     currentExtensionId,
   } = useScan();
 
-  const hasCachedResultsForThisScan =
-    scanResults &&
-    (currentExtensionId === scanId ||
-      (scanId && normalizeExtensionId(scanResults.extension_id || "") === scanId));
+  const hasCachedResultsForThisScan = (() => {
+    if (!scanResults || !scanId) return false;
+    if (currentExtensionId === scanId) return true;
+    if (scanResults.extension_id === scanId) return true;
+    if (normalizeExtensionId(scanResults.extension_id || "") === scanId) return true;
+    // Slug-based matching: compare against stored slug or regenerated slug from name
+    if (scanResults.slug === scanId) return true;
+    const derivedSlug = generateSlug(scanResults.extension_name || scanResults.metadata?.title || "");
+    if (derivedSlug && derivedSlug === scanId) return true;
+    // After fetch, currentExtensionId is set to the resolved extension_id
+    if (currentExtensionId && currentExtensionId === scanResults.extension_id) return true;
+    return false;
+  })();
 
   const [isLoading, setIsLoading] = useState(false);
   const [rawData, setRawData] = useState(null);
@@ -152,7 +162,10 @@ const ScanResultsPageV2 = () => {
     }
   }, [scanId, hasCachedResultsForThisScan, scanResults]);
 
-  // Load results - use context when already available (e.g. after completing scan), else fetch
+  // Load results - use context when already available (e.g. after completing scan), else fetch.
+  // Only re-run when scanId changes; loadResultsById is now stable (no deps) and
+  // hasCachedResultsForThisScan is checked inside the effect but must NOT be a dependency
+  // because it changes when scanResults arrives, which would re-trigger fetching.
   useEffect(() => {
     let cancelled = false;
 
@@ -188,7 +201,7 @@ const ScanResultsPageV2 = () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scanId, loadResultsById, hasCachedResultsForThisScan]);
+  }, [scanId]);
 
   // Normalize scan results when they change
   useEffect(() => {

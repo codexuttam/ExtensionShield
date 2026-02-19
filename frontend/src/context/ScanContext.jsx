@@ -425,16 +425,25 @@ export const ScanProvider = ({ children }) => {
     }
   }, [navigate]);
 
-  // Load results by extension ID (single API: realScanService.getRealScanResults)
+  // Load results by extension ID or slug (single API: realScanService.getRealScanResults)
   // Uses cached results when already loaded for this extension (e.g. after completing a scan).
+  // Uses a ref for the cache check to avoid recreating this callback on every state change,
+  // which would cause infinite re-render loops in consuming useEffects.
+  const currentExtensionIdRef = useRef(currentExtensionId);
+  const scanResultsRef = useRef(scanResults);
+  currentExtensionIdRef.current = currentExtensionId;
+  scanResultsRef.current = scanResults;
+
   const loadResultsById = useCallback(async (extId) => {
     try {
-      // If we already have results for this extension (e.g. just completed scan), return them without clearing or refetching
-      if (extId === currentExtensionId && scanResults) {
-        return scanResults;
+      // If we already have results for this identifier, return without refetching.
+      // Check both the raw identifier and the resolved extension_id from prior results.
+      const cachedId = currentExtensionIdRef.current;
+      const cachedResults = scanResultsRef.current;
+      if (cachedResults && (extId === cachedId || extId === cachedResults.extension_id)) {
+        return cachedResults;
       }
 
-      // Clear previous extension's data before fetching new one
       setScanResults(null);
       setCurrentExtensionId(extId);
       setError("");
@@ -445,13 +454,16 @@ export const ScanProvider = ({ children }) => {
         return null;
       }
       setScanResults(data);
-      setCurrentExtensionId(extId);
+      // Store the real extension_id from backend response so subsequent cache checks
+      // match even when the page was loaded via slug URL.
+      const resolvedId = data.extension_id || extId;
+      setCurrentExtensionId(resolvedId);
       return data;
     } catch (err) {
       setError("Failed to load scan results.");
       return null;
     }
-  }, [currentExtensionId, scanResults]);
+  }, []);
 
   // Clear scan state
   const clearScan = useCallback(() => {

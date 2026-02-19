@@ -113,7 +113,6 @@ $success-green: #22c55e;
     justify-content: center;
     border-radius: 50%;
     border: 1px solid $modal-border;
-    background: rgba(13, 20, 36, 0.9);
     color: $text-secondary;
     transition: all 0.25s ease;
 
@@ -425,7 +424,6 @@ $success-green: #22c55e;
 
 /* Light mode: steps in white for visibility against dark caption bar */
 .light .demo-modal-caption-row {
-  background: rgba(13, 20, 36, 0.9);
   padding: 0.5rem 1rem;
   border-radius: 8px;
 }

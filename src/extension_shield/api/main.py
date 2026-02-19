@@ -2490,6 +2490,7 @@ async def get_scan_results(identifier: str, http_request: Request):
         formatted_results: Dict[str, Any] = {
             "extension_id": results.get("extension_id"),
             "extension_name": results.get("extension_name"),
+            "slug": results.get("slug"),
             "url": results.get("url"),
             "timestamp": results.get("timestamp"),
             "status": results.get("status"),
