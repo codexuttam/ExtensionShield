@@ -17,7 +17,8 @@ import './DonutScore.scss';
  */
 const DonutScore = ({ score = 0, band = 'NA', size = 300, label }) => {
   const clampedScore = Math.max(0, Math.min(100, score ?? 0));
-  const [animatedScore, setAnimatedScore] = useState(0);
+  // Initialize to final score so first paint has correct layout (avoids 0→score shift on /research/methodology)
+  const [animatedScore, setAnimatedScore] = useState(clampedScore);
 
   const prefersReducedMotion = useMemo(() => {
     if (typeof window === 'undefined') return false;

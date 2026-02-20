@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Activity,
   Sparkles,
+  Wrench,
 } from "lucide-react";
 import "./OpenCoreEnginesSection.scss";
 
@@ -86,6 +87,26 @@ const EnterpriseGovernanceSection = ({ reducedMotion = false }) => {
                   <span>{item.text}</span>
                 </motion.li>
               ))}
+              <motion.li
+                className="enterprise-governance-bullet enterprise-governance-bullet--block"
+                initial={reducedMotion ? false : { opacity: 0, x: -8 }}
+                whileInView={reducedMotion ? {} : { opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.35, delay: 0.08 + BULLETS.length * 0.04 }}
+              >
+                <Wrench className="enterprise-governance-bullet-icon" aria-hidden />
+                <div className="enterprise-governance-bullet__block">
+                  <p className="enterprise-governance-bullet__block-title">Custom extensions, without the risk</p>
+                  <p className="enterprise-governance-bullet__block-body">
+                    We build or harden internal extensions to meet policy: least-privilege permissions, signed builds, and update diff alerts.
+                  </p>
+                  <ul className="enterprise-governance-bullet__block-list" aria-label="Features">
+                    <li>Permission minimization (MV3 best practices)</li>
+                    <li>Reproducible builds + signing</li>
+                    <li>Update diff alerts (permissions/domains/risk)</li>
+                  </ul>
+                </div>
+              </motion.li>
             </ul>
             <motion.div
               className="enterprise-governance-ctas"

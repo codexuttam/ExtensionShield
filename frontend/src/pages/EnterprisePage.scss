@@ -153,6 +153,106 @@
   opacity: 0.95;
 }
 
+.enterprise-card-divider {
+  height: 1px;
+  background: var(--atlas-border);
+  margin: 1.5rem 0;
+}
+
+.enterprise-pilot-addon {
+  padding-top: 0.5rem;
+
+  &__heading {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--atlas-text-primary);
+    margin: 0 0 0.625rem;
+    line-height: 1.35;
+  }
+
+  &__text {
+    font-size: 0.8125rem;
+    color: var(--atlas-text-secondary);
+    line-height: 1.55;
+    margin: 0 0 0.625rem;
+  }
+
+  &__bullets {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--atlas-text-muted);
+    line-height: 1.5;
+
+    li {
+      position: relative;
+      padding-left: 1rem;
+      margin-bottom: 0.25rem;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      &::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        color: var(--atlas-accent);
+      }
+    }
+  }
+}
+
+.enterprise-interests-field {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+
+  .field-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: var(--weight-ui, 500);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--atlas-text-muted);
+    margin-bottom: 0.625rem;
+  }
+}
+
+.enterprise-interests {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.enterprise-interest-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  font-size: 0.875rem;
+  color: var(--atlas-text-secondary);
+  cursor: pointer;
+  line-height: 1.35;
+  min-height: 1.5rem;
+
+  input[type="checkbox"] {
+    width: 1.125rem;
+    height: 1.125rem;
+    margin: 0;
+    padding: 0;
+    accent-color: var(--atlas-accent);
+    flex-shrink: 0;
+    align-self: center;
+    vertical-align: middle;
+  }
+
+  span {
+    flex: 1;
+    line-height: 1.35;
+    padding-left: 0.4rem;
+  }
+}
+
 .enterprise-form {
   background: var(--atlas-bg-card);
   border: 1px solid var(--atlas-border);

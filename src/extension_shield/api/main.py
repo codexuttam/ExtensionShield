@@ -18,7 +18,7 @@ if (_PROJECT_ROOT / ".env").exists():
 
 import json
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from datetime import datetime, timezone, timedelta
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Response, UploadFile, File, Request
@@ -98,6 +98,12 @@ class PageViewEvent(BaseModel):
     """Request model for privacy-first pageview telemetry (no PII)."""
 
     path: str
+
+
+class CustomTelemetryEvent(BaseModel):
+    """Request model for custom frontend events (e.g. CTA clicks). No PII."""
+
+    event: str
 
 
 # Sentry: enable only in prod when SENTRY_DSN is set; never capture request bodies or auth headers
@@ -527,8 +533,10 @@ def _has_cached_results(extension_id: str) -> bool:
 class EnterprisePilotRequest(BaseModel):
     name: str
     email: str
-    company: str
+    company: Optional[str] = None
     notes: Optional[str] = None
+    interests: Optional[List[str]] = None
+    custom_extension_notes: Optional[str] = None
 
 
 enterprise_pilot_requests: list[Dict[str, Any]] = []
@@ -2157,11 +2165,17 @@ def _send_enterprise_pilot_emails(item: Dict[str, Any]) -> None:
         })
         notify_email = os.getenv("ENTERPRISE_NOTIFY_EMAIL", "").strip()
         if notify_email and notify_email != to_email:
+            interests = item.get("interests") or []
+            custom_notes = (item.get("custom_extension_notes") or "").strip() or None
+            interests_str = ", ".join(interests) if interests else "—"
+            notify_html = f"<p>New pilot request from {name} &lt;{to_email}&gt;, company: {company or '—'}.</p><p>Interests: {interests_str}</p><p>Notes: {notes or '—'}</p>"
+            if custom_notes:
+                notify_html += f"<p><strong>Custom extension notes:</strong> {custom_notes}</p>"
             resend.Emails.send({
                 "from": from_email,
                 "to": [notify_email],
-                "subject": f"New Enterprise Pilot: {company} ({name})",
-                "html": f"<p>New pilot request from {name} &lt;{to_email}&gt;, company: {company}.</p><p>Notes: {notes or '—'}</p>",
+                "subject": f"New Enterprise Pilot: {company or '—'} ({name})",
+                "html": notify_html,
             })
     except Exception as e:
         logger.warning("Enterprise pilot email send failed: %s", e)
@@ -2178,8 +2192,10 @@ async def create_enterprise_pilot_request(request: EnterprisePilotRequest, http_
         "user_id": user_id,
         "name": request.name.strip(),
         "email": request.email.strip(),
-        "company": request.company.strip(),
+        "company": (request.company or "").strip() or None,
         "notes": (request.notes or "").strip() or None,
+        "interests": request.interests or [],
+        "custom_extension_notes": (request.custom_extension_notes or "").strip() or None,
     }
     enterprise_pilot_requests.append(item)
     _send_enterprise_pilot_emails(item)
@@ -2872,6 +2888,18 @@ async def track_pageview(event: PageViewEvent):
         # If backend doesn't support telemetry methods, fail open (do not break the UI).
         count = 0
     return {"day": day, "path": path if path.startswith("/") else f"/{path}", "count": count}
+
+
+@app.post("/api/telemetry/event")
+async def track_custom_event(event: CustomTelemetryEvent):
+    """
+    Log a custom frontend event (e.g. enterprise_custom_extension_cta_click).
+    No PII; fails silently if backend has no storage for events.
+    """
+    name = (event.event or "").strip()
+    if name:
+        logger.info("Telemetry event: %s", name)
+    return {"ok": True}
 
 
 @app.get("/api/telemetry/summary")

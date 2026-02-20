@@ -1,11 +1,20 @@
-import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useMemo, useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import realScanService from "../services/realScanService";
 import SEOHead from "../components/SEOHead";
+import { trackEvent } from "../services/telemetryService";
 import "./EnterprisePage.scss";
+
+const INTEREST_OPTIONS = [
+  { value: "monitoring_rescan", label: "Monitoring + auto-rescan on updates" },
+  { value: "policy_allow_block", label: "Policy allow/block + approvals" },
+  { value: "audit_exports", label: "Audit exports / SIEM integrations" },
+  { value: "custom_extension", label: "Custom extension build / hardening (pilot)" },
+];
 
 const EnterprisePage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
   const [form, setForm] = useState({
@@ -13,16 +22,45 @@ const EnterprisePage = () => {
     email: "",
     company: "",
     notes: "",
+    interests: [],
+    custom_extension_notes: "",
   });
 
   const [submitState, setSubmitState] = useState("idle"); // idle | loading | success | error
   const [submitMessage, setSubmitMessage] = useState("");
 
+  // Prefill interests when coming from landing CTA (?interest=custom-extension)
+  useEffect(() => {
+    const interest = searchParams.get("interest");
+    if (interest === "custom-extension") {
+      setForm((prev) => ({
+        ...prev,
+        interests: prev.interests.includes("custom_extension")
+          ? prev.interests
+          : [...prev.interests, "custom_extension"],
+      }));
+    }
+  }, [searchParams]);
+
   const isValid = useMemo(() => {
-    return Boolean(form.name.trim() && form.email.trim() && form.company.trim());
-  }, [form.name, form.email, form.company]);
+    return Boolean(form.name.trim() && form.email.trim());
+  }, [form.name, form.email]);
 
   const onChange = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }));
+
+  const onInterestToggle = (value) => {
+    setForm((prev) => {
+      const next = prev.interests.includes(value)
+        ? prev.interests.filter((i) => i !== value)
+        : [...prev.interests, value];
+      if (value === "custom_extension" && next.includes("custom_extension")) {
+        trackEvent("enterprise_interest_custom_extension_checked");
+      }
+      return { ...prev, interests: next };
+    });
+  };
+
+  const hasCustomExtensionInterest = form.interests.includes("custom_extension");
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -32,10 +70,18 @@ const EnterprisePage = () => {
     setSubmitMessage("");
 
     try {
+      const payload = {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        company: form.company.trim() || null,
+        notes: form.notes.trim() || null,
+        interests: form.interests,
+        custom_extension_notes: hasCustomExtensionInterest ? (form.custom_extension_notes.trim() || null) : null,
+      };
       const res = await fetch(`${API_BASE_URL}/api/enterprise/pilot-request`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...realScanService.getUserHeaders() },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -60,7 +106,14 @@ const EnterprisePage = () => {
 
       setSubmitState("success");
       setSubmitMessage("Request received. We’ll reach out soon.");
-      setForm({ name: "", email: "", company: "", notes: "" });
+      setForm({
+        name: "",
+        email: "",
+        company: "",
+        notes: "",
+        interests: [],
+        custom_extension_notes: "",
+      });
     } catch (err) {
       setSubmitState("error");
       setSubmitMessage(err?.message || "Something went wrong. Please try again.");
@@ -140,6 +193,18 @@ const EnterprisePage = () => {
                 SSO/RBAC <span className="coming-soon-tag">Coming soon</span>
               </li>
             </ul>
+            <div className="enterprise-card-divider" aria-hidden="true" />
+            <div className="enterprise-pilot-addon">
+              <h3 className="enterprise-pilot-addon__heading">Pilot add-on: Custom Extension Build / Hardening</h3>
+              <p className="enterprise-pilot-addon__text">
+                We can build a small internal extension or harden an existing one, then monitor updates with policy + audit exports.
+              </p>
+              <ul className="enterprise-pilot-addon__bullets">
+                <li>Least-privilege permissions</li>
+                <li>Signed releases</li>
+                <li>Continuous monitoring + export</li>
+              </ul>
+            </div>
           </div>
 
           <form className="enterprise-form" onSubmit={onSubmit}>
@@ -168,15 +233,42 @@ const EnterprisePage = () => {
                 />
               </div>
               <div className="field full">
-                <label htmlFor="enterprise-company">Company</label>
+                <label htmlFor="enterprise-company">Company (optional)</label>
                 <input
                   id="enterprise-company"
                   value={form.company}
                   onChange={onChange("company")}
                   autoComplete="organization"
-                  aria-required="true"
                 />
               </div>
+              <div className="field full enterprise-interests-field">
+                <span className="field-label" id="enterprise-interests-label">What are you interested in?</span>
+                <div className="enterprise-interests" role="group" aria-labelledby="enterprise-interests-label">
+                  {INTEREST_OPTIONS.map((opt) => (
+                    <label key={opt.value} className="enterprise-interest-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={form.interests.includes(opt.value)}
+                        onChange={() => onInterestToggle(opt.value)}
+                        aria-describedby={opt.value === "custom_extension" ? "enterprise-custom-notes-desc" : undefined}
+                      />
+                      <span>{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              {hasCustomExtensionInterest && (
+                <div className="field full" id="enterprise-custom-notes-desc">
+                  <label htmlFor="enterprise-custom-extension-notes">Custom extension notes (optional)</label>
+                  <textarea
+                    id="enterprise-custom-extension-notes"
+                    value={form.custom_extension_notes}
+                    onChange={onChange("custom_extension_notes")}
+                    placeholder="What should the extension do? Target sites, required permissions, users, and any compliance constraints."
+                    rows={4}
+                  />
+                </div>
+              )}
               <div className="field full">
                 <label htmlFor="enterprise-notes">Notes (optional)</label>
                 <textarea
@@ -198,7 +290,7 @@ const EnterprisePage = () => {
               type="submit"
               className="enterprise-submit"
               disabled={!isValid || submitState === "loading"}
-              title={!isValid ? "Please fill name, work email, and company" : ""}
+              title={!isValid ? "Please fill name and work email" : ""}
               aria-busy={submitState === "loading"}
             >
               {submitState === "loading" ? "Submitting..." : "Request Enterprise Pilot"}

@@ -212,6 +212,44 @@
   }
 }
 
+.pipeline-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.pipeline-open-source-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  color: var(--atlas-text-secondary, #94a3b8);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.35);
+    color: #22c55e;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--atlas-accent, #22c55e);
+    outline-offset: 2px;
+  }
+}
+
+.pipeline-open-source-trigger-icon {
+  width: 16px;
+  height: 16px;
+}
+
 .pipeline-badge {
   display: inline-flex;
   align-items: center;
@@ -223,14 +261,13 @@
   font-size: 0.6875rem;
   font-weight: 700;
   color: #22c55e;
-  margin-bottom: 0.75rem;
   letter-spacing: 0.05em;
-  
+
   svg {
     width: 12px;
     height: 12px;
   }
-  
+
   &.auto-update {
     background: var(--color-info-bg);
     border-color: var(--color-info-border);
@@ -363,6 +400,13 @@
    Open Source Credit Section
    ============================================================================ */
 
+/* Dialog content for open-source credit (opened from pipeline card) */
+.methodology-open-source-dialog {
+  background: var(--theme-bg-card) !important;
+  border-color: var(--theme-border) !important;
+  max-width: 520px;
+}
+
 .open-source-credit {
   margin: 4rem 0 3rem;
   padding: 2.5rem;
@@ -371,7 +415,15 @@
   border-radius: 16px;
   text-align: center;
   box-shadow: var(--theme-shadow-card);
-  
+
+  &--modal {
+    margin: 0;
+    padding: 0;
+    padding-top: 0.5rem;
+    border: none;
+    box-shadow: none;
+  }
+
   .credit-icon {
     width: 64px;
     height: 64px;

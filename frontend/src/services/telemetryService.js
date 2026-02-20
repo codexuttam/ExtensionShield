@@ -28,4 +28,22 @@ export async function trackPageView(pathname) {
   }
 }
 
+/**
+ * Log a custom event (e.g. enterprise_custom_extension_cta_click).
+ * No PII; fails silently.
+ */
+export async function trackEvent(eventName) {
+  if (!eventName || typeof eventName !== "string") return;
+  try {
+    await fetch("/api/telemetry/event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: eventName.trim() }),
+      keepalive: true,
+    });
+  } catch {
+    // Fail silently
+  }
+}
+
 
