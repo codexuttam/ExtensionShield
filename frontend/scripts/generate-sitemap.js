@@ -6,7 +6,7 @@
  * Generates sitemap.xml from the route configuration in src/routes/routes.jsx.
  * Single source of truth: any route with `seo` and no `:` or `*` in path is included.
  *
- * Every <url> includes <lastmod> (YYYY-MM-DD) set to the date the sitemap is generated.
+ * Every <url> includes <lastmod> in W3C/ISO 8601 format (build time in UTC).
  * Using one consistent rule for all URLs avoids misleading Google with stale dates.
  *
  * Run: npm run generate:sitemap
@@ -57,7 +57,8 @@ function generateSitemap() {
   const source = readFileSync(ROUTES_PATH, 'utf-8');
   const sitemapRoutes = extractSitemapRoutesFromSource(source);
 
-  const lastmod = new Date().toISOString().slice(0, 10);
+  // Full ISO 8601 (e.g. 2026-02-21T12:00:00.000Z) — recommended by Google/Bing for crawl signals
+  const lastmod = new Date().toISOString();
   const urls = sitemapRoutes
     .map((route) => {
       const loc = `${SITE_URL}${route.path}`;
