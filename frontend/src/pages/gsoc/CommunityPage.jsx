@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import SEOHead from "../../components/SEOHead";
+import LeadershipDashboard from "../../components/LeadershipDashboard";
 import "./CommunityPage.scss";
 
 const CommunityPage = () => {
@@ -87,6 +88,8 @@ const CommunityPage = () => {
               Read Contributor Guide
             </Link>
           </div>
+
+          <LeadershipDashboard limit={15} />
         </div>
       </div>
     </>
