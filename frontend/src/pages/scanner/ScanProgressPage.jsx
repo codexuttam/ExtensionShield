@@ -1,22 +1,14 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
+import { Copy, Check } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { useScan } from "../../context/ScanContext";
 import { EXTENSION_ICON_PLACEHOLDER, getExtensionIconUrl } from "../../utils/constants";
 import realScanService from "../../services/realScanService";
 import { getScanResultsRoute } from "../../utils/slug";
-import ScanHUD from "../../components/ScanHUD";
 import SEOHead from "../../components/SEOHead";
 import { normalizeExtensionId } from "../../utils/extensionId";
 import { logger } from "../../utils/logger";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../../components/ui/dialog";
 import "./ScanProgressPage.scss";
 
 const ScanProgressPage = () => {
@@ -54,16 +46,10 @@ const ScanProgressPage = () => {
   const [extensionName, setExtensionName] = useState(null);
   const [scanComplete, setScanComplete] = useState(false);
   const [alreadyScanned, setAlreadyScanned] = useState(false);
-  // Initialize userExited to false - always start with game visible when scanId exists
-  const [userExited, setUserExited] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [scanProgress, setScanProgress] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
-  const completionShownRef = useRef(false);
-  // Tracks whether any in-progress state was seen before completion.
-  // If the first poll returns scanned=true, the extension was already scanned.
+  const [copiedId, setCopiedId] = useState(false);
   const hasSeenInProgressRef = useRef(false);
   
   // Detect mobile
@@ -167,31 +153,29 @@ const ScanProgressPage = () => {
         }
 
         if (status.scanned) {
-          // Stop polling immediately on completion
           if (intervalId) { clearInterval(intervalId); intervalId = null; }
 
-          // Detect "already scanned": completed on first poll, never saw in-progress
           const wasAlreadyScanned = !hasSeenInProgressRef.current;
           if (wasAlreadyScanned) {
             setAlreadyScanned(true);
             setScanProgress(100);
           }
-
           setScanComplete(true);
-          if (!completionShownRef.current) {
-            completionShownRef.current = true;
-            setShowCompletionModal(true);
-          }
 
-          // Best-effort: fetch results and set current extension so results page has cache (no flash).
+          // Fetch results then auto-redirect to results page (no "View Results" step).
           try {
             const results = await realScanService.getRealScanResults(scanId);
             if (!cancelled && results) {
               setScanResults(results);
               setCurrentExtensionId(scanId);
             }
+            const extId = results?.extension_id || scanId;
+            const extName = results?.extension_name;
+            const route = getScanResultsRoute(extId, extName);
+            if (route) navigate(route, { replace: true });
           } catch (_e) {
-            // Results might not be ready yet — no further polling needed.
+            const route = getScanResultsRoute(scanId);
+            if (route) navigate(route, { replace: true });
           }
         }
       } catch (e) {
@@ -211,34 +195,27 @@ const ScanProgressPage = () => {
       cancelled = true;
       if (intervalId) clearInterval(intervalId);
     };
-  }, [scanId, setError, setScanResults, setCurrentExtensionId]);
+  }, [scanId, navigate, setError, setScanResults, setCurrentExtensionId]);
 
   // Reset state when scanId changes or on mount
-  // This ensures that when navigating to a new scan, the game always shows immediately
   useEffect(() => {
     if (scanId) {
-      setUserExited(false);
       setScanComplete(false);
       setAlreadyScanned(false);
-      completionShownRef.current = false;
       hasSeenInProgressRef.current = false;
     }
   }, [scanId]);
 
-  // Show loading screen when scanId exists in URL (unless user explicitly exited)
-  const shouldShowLoading = scanId ? !userExited : false;
+  const shouldShowLoading = !!scanId;
 
-  // Handle errors with modal
+  // Handle errors (show inline on progress page)
   useEffect(() => {
     if (error && shouldShowLoading) {
-      // Check for API key errors (401) - show user-friendly message
       let displayError = error;
       if (error.includes("API key") || error.includes("Invalid API key") || error.includes("Authentication") || error.includes("401") || error.includes("sk-proj")) {
         displayError = "Connection is down try back in a while";
       }
       setErrorMessage(displayError);
-      setShowErrorModal(true);
-      // Don't clear error - let user dismiss it
     }
   }, [error, shouldShowLoading]);
 
@@ -269,7 +246,6 @@ const ScanProgressPage = () => {
         }
         
         setErrorMessage(errorMsg);
-        setShowErrorModal(true);
         event.preventDefault();
       }
     };
@@ -302,7 +278,6 @@ const ScanProgressPage = () => {
         }
         
         setErrorMessage(errorMsg);
-        setShowErrorModal(true);
         event.preventDefault();
       }
     };
@@ -316,33 +291,26 @@ const ScanProgressPage = () => {
     };
   }, [shouldShowLoading]);
 
-  const handleViewResults = useCallback(async () => {
-    setUserExited(true);
-    setShowCompletionModal(false);
-
-    let extId = scanResults?.extension_id || scanId;
-    let extName = scanResults?.extension_name;
-
-    if (!extName && scanId) {
-      try {
-        const freshResults = await realScanService.getRealScanResults(scanId);
-        if (freshResults) {
-          extId = freshResults.extension_id || extId;
-          extName = freshResults.extension_name;
-          setScanResults(freshResults);
-        }
-      } catch (_e) { /* fall through with what we have */ }
-    }
-
-    const route = getScanResultsRoute(extId, extName);
-    if (route) navigate(route, { replace: true });
-  }, [scanResults?.extension_id, scanResults?.extension_name, scanId, navigate, setScanResults]);
-
   const handleDismissError = useCallback(() => {
-    setShowErrorModal(false);
     setError(null);
     setErrorMessage("");
   }, [setError]);
+
+  const handleCopyId = useCallback(async () => {
+    if (!scanId) return;
+    try {
+      await navigator.clipboard.writeText(scanId);
+      setCopiedId(true);
+      setTimeout(() => setCopiedId(false), 2000);
+    } catch (_e) {}
+  }, [scanId]);
+
+  // Status label for centered card: Completed | In progress | Not complete
+  const getScanStatusLabel = () => {
+    if (scanComplete) return alreadyScanned ? "Previously scanned" : "Completed";
+    if (scanProgress > 0 || scanStage) return "In progress";
+    return "Not complete";
+  };
 
   // Always render something - never show blank page
   // Show error if normalized ID is empty (invalid format or missing)
@@ -383,97 +351,73 @@ const ScanProgressPage = () => {
       <div className="scan-progress-page">
       {showLoadingScreen ? (
         <>
-          {/* Header overlay */}
-          <div className="scan-progress-header">
-            <h1 className="scan-progress-title">
-              {scanComplete
-                ? (alreadyScanned
-                    ? "Results ready"
-                    : "Scan complete")
-                : "Scan in progress"}
-            </h1>
-            {scanComplete && (
-              <div className="scan-progress-actions">
-                <Button
-                  onClick={handleViewResults}
-                  className="scan-progress-view-results"
-                  variant="default"
-                  size="lg"
-                >
-                  View Results
-                </Button>
+          {/* Centered extension scan status (no right sidebar) */}
+          <div className="scan-progress-center">
+            <div className="scan-progress-status-card">
+              <div className="scan-progress-status-section">
+                <div className="scan-progress-status-section-title">Extension</div>
+                <div className="scan-progress-status-extension">
+                  <img
+                    src={extensionLogo}
+                    alt=""
+                    className="scan-progress-status-icon"
+                    onError={(e) => { e.target.style.display = "none"; }}
+                  />
+                  <div className="scan-progress-status-extension-details">
+                    <div className="scan-progress-status-name">
+                      {extensionName || `Extension ${scanId?.substring(0, 8)}...`}
+                    </div>
+                    <div className="scan-progress-status-id-row">
+                      <code className="scan-progress-status-id">
+                        {scanId?.length > 20 ? `${scanId.substring(0, 20)}...` : scanId}
+                      </code>
+                      <button
+                        type="button"
+                        onClick={handleCopyId}
+                        className="scan-progress-status-copy"
+                        title="Copy ID"
+                      >
+                        {copiedId ? <Check size={14} /> : <Copy size={14} />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
-
-          {/* Minimal loading screen: spinning gear + agents investigating */}
-          <div className="scan-loading-screen">
-            <div className="scan-loading-gear" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-              </svg>
+              <div className="scan-progress-status-section">
+                <div className="scan-progress-status-section-title">Scan status</div>
+                <div className="scan-progress-status-bar-wrap">
+                  <div className="scan-progress-status-bar">
+                    <div
+                      className={`scan-progress-status-fill${alreadyScanned ? " already-scanned" : ""}`}
+                      style={{ width: `${alreadyScanned ? 100 : scanProgress}%` }}
+                    />
+                  </div>
+                  <div className="scan-progress-status-meta">
+                    <span className="scan-progress-status-pct">
+                      {alreadyScanned ? "100" : Math.round(scanProgress)}%
+                    </span>
+                    <span className="scan-progress-status-label">{getScanStatusLabel()}</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <p className="scan-loading-text">
-              {scanComplete ? "Report ready." : "Agents are investigating the files."}
-            </p>
           </div>
 
-          {/* Scan HUD */}
-          <ScanHUD
-            extensionIcon={extensionLogo}
-            extensionName={extensionName || `Extension ${scanId?.substring(0, 8)}...`}
-            extensionId={scanId}
-            scanStage={scanStage}
-            scanProgress={alreadyScanned ? 100 : scanProgress}
-            onViewFindings={handleViewResults}
-            isMobile={isMobile}
-            scanComplete={scanComplete}
-            alreadyScanned={alreadyScanned}
-          />
-
-          {/* Error Modal */}
-          <Dialog open={showErrorModal} onOpenChange={setShowErrorModal}>
-            <DialogContent className="error-modal-content">
-              <DialogHeader>
-                <DialogTitle className="error-modal-title">
-                  Something Went Wrong
-                </DialogTitle>
-                <DialogDescription className="error-modal-description">
-                  {errorMessage || "An error occurred. You can try again or go back to the scanner."}
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
+          {/* Inline error (no overlay) */}
+          {errorMessage && (
+            <div className="scan-progress-inline-error">
+              <h3>Something went wrong</h3>
+              <p>{errorMessage}</p>
+              <div className="scan-progress-inline-error-actions">
                 <Button onClick={handleDismissError} variant="default">
                   Dismiss
                 </Button>
                 <Button onClick={() => navigate("/scan")} variant="outline">
                   Go to Scanner
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          {/* Completion Modal */}
-          <Dialog open={showCompletionModal} onOpenChange={setShowCompletionModal}>
-            <DialogContent className="completion-modal-content">
-              <DialogHeader>
-                <DialogTitle className="completion-modal-title">
-                  {alreadyScanned ? "Results Available" : "Scan Complete"}
-                </DialogTitle>
-                <DialogDescription className="completion-modal-description">
-                  {alreadyScanned
-                    ? "This extension was previously scanned. Your report is ready to view."
-                    : "Your extension scan has finished. View the results below."}
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button onClick={handleViewResults} variant="default">
-                  View Results
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              </div>
+            </div>
+          )}
         </>
       ) : (
         <div className="progress-container">
