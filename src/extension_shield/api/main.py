@@ -16,6 +16,7 @@ if (_PROJECT_ROOT / ".env").exists():
     from dotenv import load_dotenv
     load_dotenv(_PROJECT_ROOT / ".env")
 
+import html as html_module
 import json
 import logging
 from typing import Optional, Dict, Any, List
@@ -542,6 +543,92 @@ class EnterprisePilotRequest(BaseModel):
 
 
 enterprise_pilot_requests: list[Dict[str, Any]] = []
+
+
+# -----------------------------------------------------------------------------
+# Careers apply (in-memory + email via Resend)
+# -----------------------------------------------------------------------------
+class CareersApplyRequest(BaseModel):
+    """Request model for careers application form."""
+
+    full_name: str = Field(..., min_length=1, max_length=200)
+    email: str = Field(..., min_length=1, max_length=320)
+    role_id: Optional[str] = Field(None, max_length=100)
+    linkedin_url: Optional[str] = Field(None, max_length=500)
+    github_url: Optional[str] = Field(None, max_length=500)
+    resume_link: Optional[str] = Field(None, max_length=1000)
+    note: Optional[str] = Field(None, max_length=2000)
+
+
+careers_apply_submissions: list[Dict[str, Any]] = []
+
+
+def _send_careers_apply_email(item: Dict[str, Any]) -> None:
+    """Send careers application to team email (and optional confirmation to applicant) via Resend. No-op if RESEND_API_KEY unset."""
+    api_key = os.getenv("RESEND_API_KEY", "").strip()
+    if not api_key or api_key.startswith("re_xxxx"):
+        return
+    from_email = os.getenv("CAREERS_FROM_EMAIL", os.getenv("ENTERPRISE_FROM_EMAIL", "ExtensionShield <onboarding@resend.dev>")).strip()
+    to_careers = os.getenv("CAREERS_NOTIFY_EMAIL", "careers@extensionshield.com").strip()
+    if not to_careers:
+        return
+    try:
+        import resend
+        resend.api_key = api_key
+
+        def esc(s: Optional[str]) -> str:
+            if s is None or not s.strip():
+                return "—"
+            return html_module.escape(s.strip())
+
+        full_name = esc(item.get("full_name"))
+        email = item.get("email", "").strip()
+        role_id = esc(item.get("role_id"))
+        linkedin = esc(item.get("linkedin_url"))
+        github = esc(item.get("github_url"))
+        resume = esc(item.get("resume_link"))
+        note = esc(item.get("note"))
+
+        subject = f"Careers application: {full_name}"
+        if role_id and role_id != "—":
+            subject += f" — {role_id}"
+
+        html = f"""
+        <p><strong>New careers application</strong></p>
+        <p><strong>Name:</strong> {full_name}<br/>
+        <strong>Email:</strong> {email}<br/>
+        <strong>Role:</strong> {role_id}<br/>
+        <strong>LinkedIn:</strong> {linkedin}<br/>
+        <strong>GitHub:</strong> {github}<br/>
+        <strong>Resume:</strong> {resume}</p>
+        """
+        if note and note != "—":
+            html += f"<p><strong>Note:</strong><br/>{note}</p>"
+        html += "<p>— ExtensionShield Careers</p>"
+
+        resend.Emails.send({
+            "from": from_email,
+            "to": [to_careers],
+            "subject": subject,
+            "html": html,
+        })
+
+        # Optional confirmation to applicant
+        confirm_to = os.getenv("CAREERS_CONFIRM_TO_APPLICANT", "true").strip().lower() in ("1", "true", "yes")
+        if confirm_to and email:
+            confirm_html = f"""
+            <p>Hi {full_name},</p>
+            <p>Thanks for applying to ExtensionShield. We've received your application and will review it shortly.</p>
+            <p>— The ExtensionShield team</p>
+            """
+            resend.Emails.send({
+                "from": from_email,
+                "to": [email],
+                "subject": "We received your ExtensionShield application",
+                "html": confirm_html,
+            })
+    except Exception as e:
+        logger.warning("Careers apply email send failed: %s", e)
 
 
 # -----------------------------------------------------------------------------
@@ -2247,6 +2334,26 @@ async def create_enterprise_pilot_request(request: EnterprisePilotRequest, http_
     }
     enterprise_pilot_requests.append(item)
     _send_enterprise_pilot_emails(item)
+    return {"ok": True, "received_at": now}
+
+
+@app.post("/api/careers/apply")
+@_rate_limit("5/minute")
+async def create_careers_apply(request: CareersApplyRequest, http_request: Request):
+    """Accept careers application; send to team email via Resend (and optional confirmation to applicant)."""
+    now = datetime.now(timezone.utc).isoformat()
+    item = {
+        "received_at": now,
+        "full_name": request.full_name.strip(),
+        "email": request.email.strip(),
+        "role_id": (request.role_id or "").strip() or None,
+        "linkedin_url": (request.linkedin_url or "").strip() or None,
+        "github_url": (request.github_url or "").strip() or None,
+        "resume_link": (request.resume_link or "").strip() or None,
+        "note": (request.note or "").strip() or None,
+    }
+    careers_apply_submissions.append(item)
+    _send_careers_apply_email(item)
     return {"ok": True, "received_at": now}
 
 

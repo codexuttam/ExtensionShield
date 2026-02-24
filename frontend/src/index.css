@@ -1055,6 +1055,36 @@ body {
 }
 
 /* ============================================================================
+   PAGE BACK LINK/BUTTON (all routes: centered, ellipsis, hover)
+   ============================================================================ */
+.page-back-wrap {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.page-back {
+  display: inline-block;
+  color: var(--theme-text-secondary, #b8b3ab);
+  text-decoration: none;
+  font-size: 0.9375rem;
+  padding: 0.25rem 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+}
+.page-back:hover {
+  color: var(--theme-accent, #22c55e);
+}
+a.page-back {
+  cursor: pointer;
+}
+
+/* ============================================================================
    REDUCED MOTION SUPPORT
    ============================================================================ */
 

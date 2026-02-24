@@ -42,7 +42,7 @@ export const topNavItems = [
     category: NAV_CATEGORIES.RESEARCH,
     label: "Research",
     path: "/research",
-    matchPaths: ["/research", "/compare", "/open-source", "/community", "/about", "/blog"],
+    matchPaths: ["/research", "/compare", "/open-source", "/community", "/about", "/careers"],
     dropdownSections: [
       {
         heading: "Research",
@@ -58,7 +58,7 @@ export const topNavItems = [
         items: [
           { icon: "🌱", label: "Open Source", description: "Contribute & explore", path: "/open-source" },
           { icon: "💬", label: "Community", description: "Safety notes & alternatives", path: "/community" },
-          { icon: "📝", label: "Blog", description: "Security guides & updates", path: "/blog" },
+          { icon: "💼", label: "Careers", description: "Join the team", path: "/careers" },
           { icon: "👤", label: "About", description: "Founder's story", path: "/about" }
         ]
       }
@@ -164,7 +164,7 @@ export const footerConfig = {
       heading: "Company",
       links: [
         { label: "Enterprise", path: "/enterprise" },
-        { label: "Blog", path: "/blog" },
+        { label: "Careers", path: "/careers" },
         { label: "Contribute", path: "/contribute" }
       ]
     },

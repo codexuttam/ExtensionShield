@@ -49,6 +49,10 @@ const CrxcavatorAlternativePage = React.lazy(() => import("../pages/landing/Crxc
 const BlogIndexPage = React.lazy(() => import("../pages/blog/BlogIndexPage"));
 const BlogPostPage = React.lazy(() => import("../pages/blog/BlogPostPage"));
 
+// Careers
+const CareersPage = React.lazy(() => import("../pages/careers/CareersPage"));
+const CareersApplyPage = React.lazy(() => import("../pages/careers/CareersApplyPage"));
+
 // Redirect /extension/:id to /scan/results/:id (extension route removed)
 const RedirectExtensionToScanResults = () => {
   const { extensionId } = useParams();
@@ -320,6 +324,29 @@ export const routes = [
     changefreq: "monthly"
   },
 
+  // ============ CAREERS ROUTES ============
+  {
+    path: "/careers",
+    element: <CareersPage />,
+    seo: {
+      title: "Careers | ExtensionShield",
+      description: "Join ExtensionShield. We're building the security, privacy, and governance layer for browser extensions. View open roles and apply.",
+      canonical: "/careers"
+    },
+    priority: 0.75,
+    changefreq: "monthly"
+  },
+  {
+    path: "/careers/apply",
+    element: <CareersApplyPage />,
+    seo: {
+      title: "Apply | Careers | ExtensionShield",
+      description: "Apply to join ExtensionShield. Submit your application for open engineering and security roles.",
+      canonical: "/careers/apply"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
   // ============ BLOG ROUTES (SEO long-tail) ============
   {
     path: "/blog",
@@ -422,7 +449,7 @@ export const routes = [
     element: <CommunityLandingPage />,
     seo: {
       title: "Community | ExtensionShield",
-      description: "Safety notes and safer alternatives from the ExtensionShield community.",
+      description: "Join the ExtensionShield community: connect with contributors, run scans, earn karma, and help make the web safer for everyone.",
       canonical: "/community"
     },
     priority: 0.7,
@@ -447,8 +474,8 @@ export const routes = [
     path: "/contribute",
     element: <ContributePage />,
     seo: {
-      title: "Contribute to ExtensionShield | Open Source",
-      description: "How to contribute to ExtensionShield: setup guide, contribution guidelines, and getting started.",
+      title: "Everyone Can Contribute | ExtensionShield",
+      description: "Help build a safer web. Scan extensions, report threats, help others—every contribution matters, no coding required.",
       canonical: "/contribute"
     },
     priority: 0.6,
