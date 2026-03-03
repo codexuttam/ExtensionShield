@@ -1,4 +1,4 @@
-project_id = "exmwrsrwhzvxcnhcflwb"
+project_id = "your-supabase-project-ref"
 
 [db]
 # Matches Supabase default major version for new projects.

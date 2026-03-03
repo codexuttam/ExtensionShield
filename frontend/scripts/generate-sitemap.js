@@ -27,20 +27,21 @@ const ROUTES_PATH = join(__dirname, '../src/routes/routes.jsx');
 /**
  * Extract sitemap entries from routes.jsx source.
  * Includes only routes that have `seo` and a static path (no : or *).
+ * Excludes redirects (routes without seo) and dynamic segments.
  */
 function extractSitemapRoutesFromSource(source) {
   const routes = [];
-  // Match route objects: path: "/...", then optional seo block, then optional priority/changefreq
   const pathRe = /path:\s*["']([^"']+)["']/g;
   let match;
   while ((match = pathRe.exec(source)) !== null) {
     const path = match[1];
     if (path.includes(':') || path.includes('*')) continue;
-    // Check that this route has seo (look at the segment between this path and the next path: or end of array)
     const start = match.index;
     const nextPath = source.indexOf('path:', start + 5);
     const block = nextPath === -1 ? source.slice(start) : source.slice(start, nextPath);
     if (!block.includes('seo:')) continue;
+    // Exclude redirect-only routes (Navigate with no real page)
+    if (block.includes('<Navigate')) continue;
 
     const priorityMatch = block.match(/priority:\s*([\d.]+)/);
     const changefreqMatch = block.match(/changefreq:\s*["']([^"']+)["']/);
@@ -50,6 +51,8 @@ function extractSitemapRoutesFromSource(source) {
       changefreq: changefreqMatch ? changefreqMatch[1] : 'monthly',
     });
   }
+  // Sort by path for consistent, human-readable sitemap (best practice)
+  routes.sort((a, b) => a.path.localeCompare(b.path));
   return routes;
 }
 

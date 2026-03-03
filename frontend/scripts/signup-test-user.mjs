@@ -2,7 +2,7 @@
  * Trigger Supabase sign-up for a test user so a confirmation email is sent.
  * Uses VITE_SUPABASE_* from frontend/.env. Run from frontend dir:
  *   node scripts/signup-test-user.mjs [email] [password] [redirectUrl]
- *   node scripts/signup-test-user.mjs s.norzang7@gmail.com MyPass123! https://extensionshield.com/
+ *   node scripts/signup-test-user.mjs user@example.com MyPass123! https://extensionshield.com/
  * Use --prod as 4th arg for production redirect: node scripts/signup-test-user.mjs email pass --prod
  */
 
@@ -17,7 +17,7 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 const url = process.env.VITE_SUPABASE_URL;
 const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
 const args = process.argv.slice(2);
-const email = args[0] || 'snorzang65@gmail.com';
+const email = args[0] || 'test@example.com';
 const password = args[1] || 'TestPass123!';
 const prodFlag = args[2] === '--prod' || args[3] === '--prod';
 const explicitRedirect = args[2] && args[2] !== '--prod' ? args[2] : args[3] && args[3] !== '--prod' ? args[3] : null;

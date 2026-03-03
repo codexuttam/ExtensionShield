@@ -1,0 +1,26 @@
+# Gitleaks configuration for ExtensionShield
+# https://github.com/gitleaks/gitleaks
+# Blocks commits that contain secrets; allowlists known-safe example/placeholder content.
+
+title = "ExtensionShield secret scan"
+
+[allowlist]
+  description = "Allowlist placeholder and example values (no real secrets)"
+  paths = [
+    '''\.env\.example$''',
+    '''env\.production\.template$''',
+    '''\.env\.template$''',
+    '''frontend/\.env\.example$''',
+  ]
+  regexes = [
+    '''sk-your-openai-api-key-here''',
+    '''your-anon-key-here''',
+    '''your-project-id\.supabase\.co''',
+    '''your-supabase-project-ref''',
+    '''re_xxxxxxxxx''',
+    '''sbp_xxxx''',
+    '''gsk_your-groq-api-key-here''',
+    '''your-watsonx-api-key''',
+    '''your-service-role-key''',
+    '''your-project-ref''',
+  ]

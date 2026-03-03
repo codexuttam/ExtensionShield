@@ -21,7 +21,7 @@ const supabaseUrl = process.env.SUPABASE_URL || '';
 
 const projectRef = supabaseUrl.match(/https:\/\/([a-z]+)\.supabase\.co/)?.[1];
 if (!projectRef) {
-  console.error('Could not get project ref from SUPABASE_URL. Set SUPABASE_URL in .env (e.g. https://exmwrsrwhzvxcnhcflwb.supabase.co)');
+  console.error('Could not get project ref from SUPABASE_URL. Set SUPABASE_URL in .env (e.g. https://your-project-ref.supabase.co)');
   process.exit(1);
 }
 
@@ -76,5 +76,5 @@ if (!res.ok) {
 }
 
 console.log('OK. Auth SMTP config updated.');
-console.log('Run: node scripts/debug-magic-link.mjs snorzang65@gmail.com http://localhost:5174/');
+console.log('Run: node scripts/debug-magic-link.mjs your-email@example.com http://localhost:5174/');
 process.exit(0);

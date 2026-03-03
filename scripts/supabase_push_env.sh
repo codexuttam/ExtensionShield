@@ -3,10 +3,10 @@
 # Usage:
 #   ./scripts/supabase_push_env.sh prod
 #   ./scripts/supabase_push_env.sh staging
-#   ./scripts/supabase_push_env.sh <project-ref>   # e.g. exmwrsrwhzvxcnhcflwb
+#   ./scripts/supabase_push_env.sh <project-ref>
 #
 # Env (optional):
-#   SUPABASE_PROJECT_REF   - used for "prod" (default: exmwrsrwhzvxcnhcflwb)
+#   SUPABASE_PROJECT_REF   - used for "prod" (required; set in .env or export)
 #   SUPABASE_STAGING_REF  - used for "staging" (must set for staging)
 #   SUPABASE_DB_PUSH_YES  - set to non-empty to auto-confirm db push (e.g. in CI)
 
@@ -20,7 +20,7 @@ cd "$PROJECT_ROOT"
 ARG="${1:?Usage: $0 prod|staging|<project-ref>}"
 
 if [ "$ARG" = "prod" ]; then
-  REF="${SUPABASE_PROJECT_REF:-exmwrsrwhzvxcnhcflwb}"
+  REF="${SUPABASE_PROJECT_REF:?Set SUPABASE_PROJECT_REF in .env or export it}"
   ENV_LABEL="production"
 elif [ "$ARG" = "staging" ]; then
   REF="${SUPABASE_STAGING_REF:?Set SUPABASE_STAGING_REF for staging (or pass project ref: $0 <ref>)}"

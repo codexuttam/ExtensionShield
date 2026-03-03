@@ -308,7 +308,7 @@ class ExtensionMetadata:
         HTML Structure:
         <details class="...">
             <summary>... Email ...</summary>
-            <div class="...">qaro.lynnie@gmail.com</div>
+            <div class="...">developer@example.com</div>
         </details>
 
         Returns:

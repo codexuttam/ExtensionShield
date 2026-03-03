@@ -138,6 +138,8 @@ celerybeat.pid
 .env.*
 !.env.example
 !.env.template
+.env.local
+.env.*.local
 .venv
 env/
 venv/
@@ -208,3 +210,8 @@ supabase/.temp/
 supabase/.branches/
 supabase/.volumes/
 
+# Private keys and certificates (never commit)
+*.pem
+*.key
+*.p12
+*.pfx
