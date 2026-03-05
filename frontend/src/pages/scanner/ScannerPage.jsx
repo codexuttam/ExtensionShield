@@ -182,11 +182,41 @@ const ScannerPage = () => {
   const tableWrapperRef = useRef(null);
   const demoTriggerRef = useRef(null);
 
-  // Daily deep-scan limit UI state (cached lookups remain available)
   const [deepScanLimit, setDeepScanLimit] = useState(null);
   const [cachedAvailable, setCachedAvailable] = useState(false);
 
-  // Teaser: show only 10 latest scans on /scan. Full browsing is at /scan/history.
+  // Search autocomplete — queries /api/recent?search= for matching extensions
+  const [autocompleteSuggestions, setAutocompleteSuggestions] = useState([]);
+  const [autocompleteIndex, setAutocompleteIndex] = useState(0);
+  const autocompleteTimerRef = useRef(null);
+
+  const handleAutocomplete = useCallback((query) => {
+    const q = (query || "").trim();
+
+    // Skip autocomplete for URLs and extension IDs (32-char lowercase)
+    if (!q || q.length < 2 || /^https?:\/\//.test(q) || /^[a-z]{32}$/i.test(q)) {
+      setAutocompleteSuggestions([]);
+      return;
+    }
+
+    clearTimeout(autocompleteTimerRef.current);
+    autocompleteTimerRef.current = setTimeout(async () => {
+      try {
+        const results = await databaseService.getRecentScans(6, q);
+        setAutocompleteSuggestions(results || []);
+        setAutocompleteIndex(0);
+      } catch {
+        setAutocompleteSuggestions([]);
+      }
+    }, 250);
+  }, []);
+
+  const handleSelectSuggestion = useCallback((scan) => {
+    setAutocompleteSuggestions([]);
+    const route = getScanResultsRoute(scan.extension_id, scan.extension_name);
+    navigate(route);
+  }, [navigate]);
+
   const TEASER_LIMIT = 10;
 
   // Clean the URL input on mount so previous extension ID doesn't persist
@@ -552,14 +582,68 @@ const ScannerPage = () => {
               <input
                 type="text"
                 id="scanner-url-input"
-                placeholder="Paste Chrome Web Store URL or Extension ID"
+                placeholder="Search extension name or paste Store URL"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleScanClick()}
-                aria-label="Chrome Web Store URL or Extension ID"
-                autoComplete="url"
+                onChange={(e) => {
+                  setUrl(e.target.value);
+                  handleAutocomplete(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    setAutocompleteSuggestions([]);
+                    handleScanClick();
+                  }
+                  if (e.key === "Escape") setAutocompleteSuggestions([]);
+                  if (e.key === "ArrowDown" && autocompleteSuggestions.length > 0) {
+                    e.preventDefault();
+                    setAutocompleteIndex((i) => Math.min(i + 1, autocompleteSuggestions.length - 1));
+                  }
+                  if (e.key === "ArrowUp" && autocompleteSuggestions.length > 0) {
+                    e.preventDefault();
+                    setAutocompleteIndex((i) => Math.max(i - 1, 0));
+                  }
+                }}
+                onFocus={() => { if (url.trim().length >= 2) handleAutocomplete(url); }}
+                onBlur={() => { setTimeout(() => setAutocompleteSuggestions([]), 150); }}
+                aria-label="Extension name or Chrome Web Store URL"
+                autoComplete="off"
                 disabled={isScanning}
+                role="combobox"
+                aria-expanded={autocompleteSuggestions.length > 0}
+                aria-autocomplete="list"
+                aria-controls="scanner-autocomplete-list"
               />
+              {autocompleteSuggestions.length > 0 && (
+                <ul className="scanner-autocomplete" id="scanner-autocomplete-list" role="listbox">
+                  {autocompleteSuggestions.map((s, i) => (
+                    <li
+                      key={s.extension_id}
+                      role="option"
+                      aria-selected={i === autocompleteIndex}
+                      className={`scanner-autocomplete-item${i === autocompleteIndex ? " active" : ""}`}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleSelectSuggestion(s);
+                      }}
+                    >
+                      <img
+                        src={getExtensionIconUrl(s.extension_id)}
+                        alt=""
+                        className="autocomplete-icon"
+                        width="20"
+                        height="20"
+                        onError={(e) => { e.target.onerror = null; e.target.src = EXTENSION_ICON_PLACEHOLDER; }}
+                      />
+                      <span className="autocomplete-name">{s.extension_name || s.extension_id}</span>
+                      {s.risk_and_signals?.risk != null && (
+                        <span className={`autocomplete-score ${s.risk_and_signals.risk >= 75 ? "safe" : s.risk_and_signals.risk >= 50 ? "review" : "risk"}`}>
+                          {s.risk_and_signals.risk}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
               <button
                 type="button"
                 className="scanner-scan-icon"
@@ -734,7 +818,7 @@ const ScannerPage = () => {
                             />
                             <div className="extension-details">
                               <span className="extension-name">
-                                {scan.extension_name || scan.extension_id}
+                                {scan.extension_name || scan.metadata?.title || scan.metadata?.name || scan.manifest?.name || scan.extension_id}
                               </span>
                               <span className="extension-scanned">
                                 {formatTimeAgo(scan.timestamp ?? scan.scanned_at ?? scan.created_at ?? scan.updated_at)}

@@ -856,7 +856,7 @@ export function normalizeScanResult(raw: RawScanResult): ReportViewModel {
   // Build meta information (icon URL: use getExtensionIconUrl(extensionId) at display time)
   const meta: MetaVM = {
     extensionId,
-    name: raw.extension_name || formatted.name || raw.metadata?.title || raw.manifest?.name || 'Unknown Extension',
+    name: raw.extension_name || formatted.name || raw.metadata?.title || raw.metadata?.name || raw.manifest?.name || 'Unknown Extension',
     version: raw.metadata?.version || raw.manifest?.version || formatted.version,
     updatedAt: raw.metadata?.last_updated,
     users: raw.metadata?.user_count,

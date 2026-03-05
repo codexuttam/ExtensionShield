@@ -594,7 +594,7 @@ const ScanHistoryPage = () => {
                           />
                           <div className="extension-details">
                             <span className="extension-name">
-                              {scan.extension_name || scan.extension_id}
+                              {scan.extension_name || scan.metadata?.title || scan.metadata?.name || scan.manifest?.name || scan.extension_id}
                             </span>
                             <span className="extension-scanned">
                               {formatTimeAgo(scan.timestamp ?? scan.scanned_at ?? scan.created_at ?? scan.updated_at)}

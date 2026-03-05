@@ -18,14 +18,27 @@ function formatErrorMessage(detail, fallbackMessage) {
 }
 
 export async function fetchJson(url, options = {}) {
-  const response = await fetch(url, options);
-  let body = null;
+  const timeoutMs = options._timeout || 12000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
   try {
-    body = await response.json();
-  } catch {
-    body = null;
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timer);
+    let body = null;
+    try {
+      body = await response.json();
+    } catch {
+      body = null;
+    }
+    return { response, body };
+  } catch (err) {
+    clearTimeout(timer);
+    if (err.name === "AbortError") {
+      throw new Error("Request timed out. The server may be busy — try again.");
+    }
+    throw err;
   }
-  return { response, body };
 }
 
 export function buildFetchError(response, body, fallbackMessage = "Request failed") {
