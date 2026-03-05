@@ -1,8 +1,14 @@
 """
-Security Scorer
+Legacy Security Scorer (risk-point aggregation).
+
+This module is LEGACY-ONLY. The canonical scoring model is the V2 ScoringEngine
+in extension_shield.scoring.engine (multi-layer, confidence-weighted, hard gates,
+ALLOW/NEEDS_REVIEW/BLOCK). This SecurityScorer is retained for backward
+compatibility with pre-V2 scan rows and is not used in the main API path.
 
 Calculates overall security score from all analyzer results.
-Aggregates risk points from SAST, permissions, VirusTotal, entropy, webstore, and manifest.
+Aggregates risk points from SAST, permissions, VirusTotal, entropy, webstore,
+and manifest. Design inspired by ThreatXtension; see docs/NOTICE.
 """
 
 import logging
@@ -43,24 +49,14 @@ class SecurityScorer:
     }
 
     def __init__(self):
-        """Initialize the SecurityScorer."""
         self.name = "SecurityScorer"
 
     def calculate_score(self, analysis_results: Dict) -> Dict[str, Any]:
-        """
-        Calculate security score from all analysis results.
-
-        Args:
-            analysis_results: Dictionary containing results from all analyzers
-
-        Returns:
-            Dictionary with security_score, risk_level, and detailed breakdown
-        """
+        """Compute security score from all analyzer results."""
         risk_points = 0
         breakdown = {}
         details = {}
 
-        # 1. SAST Analysis (60 points max)
         sast_risk, sast_details = self._calculate_sast_risk(
             analysis_results.get('javascript_analysis', {})
         )
@@ -68,7 +64,6 @@ class SecurityScorer:
         breakdown['sast'] = sast_risk
         details['sast'] = sast_details
 
-        # 2. Permissions Analysis (30 points max)
         perm_risk, perm_details = self._calculate_permissions_risk(
             analysis_results.get('permissions_analysis', {})
         )
@@ -76,7 +71,6 @@ class SecurityScorer:
         breakdown['permissions'] = perm_risk
         details['permissions'] = perm_details
 
-        # 3. VirusTotal Analysis (50 points max)
         vt_risk, vt_details = self._calculate_virustotal_risk(
             analysis_results.get('virustotal_analysis', {})
         )
@@ -84,7 +78,6 @@ class SecurityScorer:
         breakdown['virustotal'] = vt_risk
         details['virustotal'] = vt_details
 
-        # 4. Entropy/Obfuscation Analysis (30 points max)
         entropy_risk, entropy_details = self._calculate_entropy_risk(
             analysis_results.get('entropy_analysis', {})
         )
@@ -92,7 +85,6 @@ class SecurityScorer:
         breakdown['entropy'] = entropy_risk
         details['entropy'] = entropy_details
 
-        # 5. Chrome Stats Analysis (28 points max)
         chromestats_risk, chromestats_details = self._calculate_chromestats_risk(
             analysis_results.get('chromestats_analysis', {})
         )
@@ -100,7 +92,6 @@ class SecurityScorer:
         breakdown['chromestats'] = chromestats_risk
         details['chromestats'] = chromestats_details
 
-        # 6. Webstore Analysis (5 points max)
         webstore_risk, webstore_details = self._calculate_webstore_risk(
             analysis_results.get('webstore_analysis', {})
         )
@@ -108,7 +99,6 @@ class SecurityScorer:
         breakdown['webstore'] = webstore_risk
         details['webstore'] = webstore_details
 
-        # 7. Manifest Analysis (5 points max)
         manifest_risk, manifest_details = self._calculate_manifest_risk(
             analysis_results.get('manifest', {})
         )
@@ -116,11 +106,8 @@ class SecurityScorer:
         breakdown['manifest'] = manifest_risk
         details['manifest'] = manifest_details
 
-        # Cap at 100 and invert (100 = secure, 0 = dangerous)
         total_risk = min(100, risk_points)
         security_score = 100 - total_risk
-
-        # Determine risk level
         risk_level = self._get_risk_level(security_score)
 
         logger.info(
@@ -138,15 +125,7 @@ class SecurityScorer:
         }
 
     def _calculate_sast_risk(self, sast_data: Dict) -> tuple[int, Dict]:
-        """
-        Calculate risk from SAST findings (max 60 points).
-
-        Args:
-            sast_data: SAST analysis results
-
-        Returns:
-            Tuple of (risk_points, details_dict)
-        """
+        """SAST risk (max 60 pts)."""
         findings = sast_data.get('sast_findings', {})
         if not findings:
             return 0, {'message': 'No SAST findings'}
@@ -195,15 +174,7 @@ class SecurityScorer:
         return min(60, risk), details
 
     def _calculate_permissions_risk(self, perm_data: Dict) -> tuple[int, Dict]:
-        """
-        Calculate risk from permissions (max 30 points).
-
-        Args:
-            perm_data: Permissions analysis results
-
-        Returns:
-            Tuple of (risk_points, details_dict)
-        """
+        """Permissions risk (max 30 pts)."""
         details_dict = perm_data.get('permissions_details', {})
         if not details_dict:
             return 0, {'message': 'No permissions data'}
@@ -253,15 +224,7 @@ class SecurityScorer:
         return min(30, risk), details
 
     def _calculate_virustotal_risk(self, vt_data: Dict) -> tuple[int, Dict]:
-        """
-        Calculate risk from VirusTotal (max 50 points).
-
-        Args:
-            vt_data: VirusTotal analysis results
-
-        Returns:
-            Tuple of (risk_points, details_dict)
-        """
+        """VirusTotal risk (max 50 pts)."""
         if not vt_data.get('enabled'):
             return 0, {'message': 'VirusTotal not enabled'}
 
@@ -289,15 +252,7 @@ class SecurityScorer:
         return risk, details
 
     def _calculate_entropy_risk(self, entropy_data: Dict) -> tuple[int, Dict]:
-        """
-        Calculate risk from entropy/obfuscation (max 30 points).
-
-        Args:
-            entropy_data: Entropy analysis results
-
-        Returns:
-            Tuple of (risk_points, details_dict)
-        """
+        """Entropy/obfuscation risk (max 30 pts)."""
         if not entropy_data:
             return 0, {'message': 'No entropy analysis'}
 
@@ -336,15 +291,7 @@ class SecurityScorer:
         return min(30, risk), details
 
     def _calculate_webstore_risk(self, webstore_data: Dict) -> tuple[int, Dict]:
-        """
-        Calculate risk from webstore reputation (max 5 points).
-
-        Args:
-            webstore_data: Webstore analysis results
-
-        Returns:
-            Tuple of (risk_points, details_dict)
-        """
+        """Webstore reputation risk (max 5 pts)."""
         if not webstore_data:
             return 0, {'message': 'No webstore data'}
 
@@ -393,15 +340,7 @@ class SecurityScorer:
         return min(5, risk), details
 
     def _calculate_manifest_risk(self, manifest: Dict) -> tuple[int, Dict]:
-        """
-        Calculate risk from manifest issues (max 5 points).
-
-        Args:
-            manifest: Parsed manifest.json
-
-        Returns:
-            Tuple of (risk_points, details_dict)
-        """
+        """Manifest issues risk (max 5 pts)."""
         if not manifest:
             return 0, {'message': 'No manifest data'}
 
@@ -435,15 +374,7 @@ class SecurityScorer:
         return min(5, risk), details
 
     def _calculate_chromestats_risk(self, chromestats_data: Dict) -> tuple[int, Dict]:
-        """
-        Calculate risk from Chrome Stats behavioral analysis (max 28 points).
-
-        Args:
-            chromestats_data: Chrome Stats analysis results
-
-        Returns:
-            Tuple of (risk_points, details_dict)
-        """
+        """Chrome Stats behavioral risk (max 31 pts)."""
         if not chromestats_data.get('enabled'):
             return 0, {'message': 'Chrome Stats not enabled'}
 
@@ -471,20 +402,12 @@ class SecurityScorer:
             'message': f"{len(risk_indicators)} behavioral risk indicators detected"
         }
 
-        # Cap at 28 points (max weight for chromestats)
-        return min(28, total_risk_score), details
+        # Cap at WEIGHTS['chromestats'] (31 points)
+        return min(self.WEIGHTS['chromestats'], total_risk_score), details
 
     @staticmethod
     def _get_risk_level(score: int) -> str:
-        """
-        Determine risk level from score.
-
-        Args:
-            score: Security score (0-100)
-
-        Returns:
-            Risk level string: 'low', 'medium', 'high', or 'critical'
-        """
+        """Map score 0-100 to risk level."""
         if score >= 80:
             return 'low'
         elif score >= 60:
@@ -493,6 +416,4 @@ class SecurityScorer:
             return 'high'
         else:
             return 'critical'
-
-# Made with Bob
 

@@ -276,12 +276,19 @@ class Database:
                 # Extract metadata
                 extension_id = result.get("extension_id")
                 metadata = result.get("metadata", {}) or {}
-                # Get extension_name from top-level first, then try metadata fields
-                extension_name = (
-                    result.get("extension_name")
-                    or metadata.get("title")
-                    or metadata.get("name")
-                    or extension_id
+                manifest = result.get("manifest", {}) or {}
+                chrome_stats = metadata.get("chrome_stats") or {}
+                # Get extension_name from top-level first, then try metadata/manifest fields
+                _name_candidates = [
+                    result.get("extension_name"),
+                    metadata.get("title"),
+                    metadata.get("name"),
+                    chrome_stats.get("name") if isinstance(chrome_stats, dict) else None,
+                    manifest.get("name"),
+                ]
+                extension_name = next(
+                    (n for n in _name_candidates if n and isinstance(n, str) and n.strip() and n.strip() != "Unknown"),
+                    extension_id,
                 )
 
                 # Calculate risk distribution

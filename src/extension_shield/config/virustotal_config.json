@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "api_key_env": "VIRUSTOTAL_API_KEY",
-  "max_files_to_scan": 10,
+  "max_files_to_scan": 5,
   "scan_manifest": true,
   "scan_js_files": true,
   "timeout_seconds": 30,

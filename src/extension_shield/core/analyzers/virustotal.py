@@ -3,14 +3,20 @@ VirusTotal Analyzer
 
 This module provides threat intelligence integration with VirusTotal API
 to check file hashes and identify known malicious extensions.
+
+Supports multiple API keys with rotation: set VIRUSTOTAL_API_KEYS (comma-separated)
+to spread load across keys and avoid rate limits (each key: 4 req/min, 500/day).
+When one key returns 429, that key is marked rate-limited and the next key is used.
 """
 
 import os
 import hashlib
 import logging
 import json
+import time
+import threading
 from pathlib import Path
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional, List, Any, Tuple
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -28,12 +34,142 @@ except ImportError:
 from extension_shield.core.analyzers import BaseAnalyzer
 
 
+def _parse_virustotal_api_keys() -> List[str]:
+    """
+    Parse VirusTotal API keys from env.
+    Supports VIRUSTOTAL_API_KEYS (comma-separated) or single VIRUSTOTAL_API_KEY.
+    Returns list of non-empty stripped keys.
+    """
+    keys_str = os.getenv("VIRUSTOTAL_API_KEYS", "").strip()
+    if keys_str:
+        keys = [k.strip() for k in keys_str.split(",") if k.strip()]
+        if keys:
+            return keys
+    single = os.getenv("VIRUSTOTAL_API_KEY", "").strip()
+    if single:
+        return [single]
+    return []
+
+
+class _VTRateLimiter:
+    """
+    Per-key rate limiter for VirusTotal free tier.
+    Enforces 4 requests / 60 s and 500 / day per key.
+    """
+
+    def __init__(self, max_per_minute: int = 4, max_per_day: int = 500):
+        self._max_min = max_per_minute
+        self._max_day = max_per_day
+        self._timestamps: List[float] = []
+        self._lock = threading.Lock()
+        self._rate_limited = False
+        self._daily_count = 0
+        self._daily_date: str = ""
+
+    @property
+    def is_rate_limited(self) -> bool:
+        return self._rate_limited
+
+    def mark_rate_limited(self) -> None:
+        self._rate_limited = True
+
+    def _reset_daily_if_needed(self) -> None:
+        import datetime as _dt
+        today = _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%d")
+        if today != self._daily_date:
+            self._daily_count = 0
+            self._daily_date = today
+            self._rate_limited = False
+
+    def wait(self) -> bool:
+        """Block until a slot is available. Returns False if this key is rate-limited."""
+        if self._rate_limited:
+            return False
+        with self._lock:
+            self._reset_daily_if_needed()
+            if self._daily_count >= self._max_day:
+                self._rate_limited = True
+                return False
+            now = time.monotonic()
+            self._timestamps = [t for t in self._timestamps if now - t < 60]
+            if len(self._timestamps) >= self._max_min:
+                sleep_for = 60 - (now - self._timestamps[0]) + 0.5
+                time.sleep(max(sleep_for, 1))
+                now = time.monotonic()
+                self._timestamps = [t for t in self._timestamps if now - t < 60]
+            self._timestamps.append(time.monotonic())
+            self._daily_count += 1
+        return True
+
+
+class _VTKeyPool:
+    """
+    Pool of VirusTotal API keys with per-key rate limiters.
+    Round-robins across keys; when a key returns 429 it is marked and the next key is used.
+    """
+
+    def __init__(self, keys: List[str], max_per_minute: int = 4, max_per_day: int = 500):
+        self._keys = list(keys)
+        self._limiters = [_VTRateLimiter(max_per_minute, max_per_day) for _ in self._keys]
+        self._index = 0
+        self._lock = threading.Lock()
+
+    def wait_and_get_key(self) -> Tuple[Optional[int], Optional[str]]:
+        """
+        Round-robin over keys until one has capacity. Blocks if needed.
+        Returns (key_index, api_key) or (None, None) if all keys are rate-limited.
+        """
+        if not self._keys:
+            return None, None
+        with self._lock:
+            start = self._index
+            for i in range(len(self._keys)):
+                idx = (start + i) % len(self._keys)
+                if self._limiters[idx].wait():
+                    self._index = (idx + 1) % len(self._keys)
+                    return idx, self._keys[idx]
+        logger.warning("VirusTotal: all keys rate-limited")
+        return None, None
+
+    def mark_rate_limited(self, key_index: int) -> None:
+        if 0 <= key_index < len(self._limiters):
+            self._limiters[key_index].mark_rate_limited()
+            logger.info("VirusTotal: key index %d marked rate-limited", key_index)
+
+    @property
+    def is_exhausted(self) -> bool:
+        return all(lim.is_rate_limited for lim in self._limiters)
+
+    @property
+    def key_count(self) -> int:
+        return len(self._keys)
+
+
+# Module-level key pool (lazy init so env is loaded)
+_vt_key_pool: Optional[_VTKeyPool] = None
+_vt_key_pool_lock = threading.Lock()
+
+
+def _get_vt_key_pool() -> Optional[_VTKeyPool]:
+    global _vt_key_pool
+    if _vt_key_pool is not None:
+        return _vt_key_pool
+    with _vt_key_pool_lock:
+        if _vt_key_pool is not None:
+            return _vt_key_pool
+        keys = _parse_virustotal_api_keys()
+        if not keys:
+            return None
+        _vt_key_pool = _VTKeyPool(keys, max_per_minute=4, max_per_day=500)
+        logger.info("VirusTotal: using %d API key(s) with rotation", len(keys))
+        return _vt_key_pool
+
+
 class VirusTotalAnalyzer(BaseAnalyzer):
     """
     Analyzes Chrome extensions using VirusTotal threat intelligence.
-
-    Computes file hashes (SHA256, SHA1, MD5) and checks them against
-    VirusTotal's database to identify known malicious files.
+    Supports multiple API keys (VIRUSTOTAL_API_KEYS) with round-robin rotation
+    to avoid rate limits until you have a commercial license.
     """
 
     # Priority files to scan (most likely to contain malicious code)
@@ -50,16 +186,20 @@ class VirusTotalAnalyzer(BaseAnalyzer):
     SCANNABLE_EXTENSIONS = {".js", ".html", ".json"}
 
     def __init__(self):
-        """Initialize the VirusTotalAnalyzer."""
+        """Initialize the VirusTotalAnalyzer. Uses VIRUSTOTAL_API_KEYS or VIRUSTOTAL_API_KEY."""
         super().__init__(name="VirusTotalAnalyzer")
-        self.api_key = os.getenv("VIRUSTOTAL_API_KEY")
-        self.enabled = bool(self.api_key) and VT_AVAILABLE
+        keys = _parse_virustotal_api_keys()
+        self.api_keys = keys
+        self.api_key = keys[0] if keys else None  # backward compat
+        self.enabled = bool(keys) and VT_AVAILABLE
         self.config = self._load_config()
 
-        if not self.api_key:
-            logger.warning("VIRUSTOTAL_API_KEY not set. VirusTotal analysis will be disabled.")
+        if not keys:
+            logger.warning("VIRUSTOTAL_API_KEY / VIRUSTOTAL_API_KEYS not set. VirusTotal analysis will be disabled.")
         elif not VT_AVAILABLE:
             logger.warning("vt-py library not available. VirusTotal analysis will be disabled.")
+        elif len(keys) > 1:
+            logger.info("VirusTotal: %d API keys configured for rotation", len(keys))
 
     @staticmethod
     def _load_config() -> Dict:
@@ -153,22 +293,27 @@ class VirusTotalAnalyzer(BaseAnalyzer):
 
     async def _check_hash_virustotal(self, file_hash: str) -> Optional[Dict[str, Any]]:
         """
-        Check a file hash against VirusTotal.
-
-        Args:
-            file_hash: SHA256 hash of the file
-
-        Returns:
-            VirusTotal analysis results or None if not found
+        Check a file hash against VirusTotal (async version).
+        Uses key pool with rotation; on 429 the current key is marked and next key is used next time.
         """
         if not self.enabled:
             return None
 
+        pool = _get_vt_key_pool()
+        if not pool:
+            return None
+        key_index, api_key = pool.wait_and_get_key()
+        if api_key is None:
+            return {
+                "found": False,
+                "status": "RATE_LIMITED",
+                "message": "VirusTotal daily/minute quota exhausted — skipping remaining lookups",
+            }
+
         try:
-            async with vt.Client(self.api_key) as client:
+            async with vt.Client(api_key) as client:
                 file_report = await client.get_object_async(f"/files/{file_hash}")
 
-                # Extract relevant information
                 stats = file_report.last_analysis_stats
                 results = {
                     "found": True,
@@ -194,7 +339,6 @@ class VirusTotalAnalyzer(BaseAnalyzer):
                     "tags": getattr(file_report, "tags", []),
                 }
 
-                # Extract malware family names from detections
                 if hasattr(file_report, "last_analysis_results"):
                     malware_families = set()
                     for engine, result in file_report.last_analysis_results.items():
@@ -209,59 +353,61 @@ class VirusTotalAnalyzer(BaseAnalyzer):
                 return results
 
         except vt.error.APIError as e:
-            # ── DEBUG: Log VirusTotal API errors ──
             error_str = str(e)
             status_code = getattr(e, "status_code", None)
-            logger.warning("[DEBUG VirusTotal] API error - status_code=%s, error=%s", status_code, error_str)
-            
-            # Check for rate limit (429) or quota exceeded
+            logger.warning("[VirusTotal] API error - status_code=%s, error=%s", status_code, error_str)
+
             if status_code == 429 or "rate limit" in error_str.lower() or "quota" in error_str.lower():
-                logger.warning("[DEBUG VirusTotal] Rate limit detected (429) - continuing with degraded mode")
+                pool.mark_rate_limited(key_index)
                 return {
                     "found": False,
                     "status": "RATE_LIMITED",
                     "message": "VirusTotal rate limit exceeded",
-                    "error": error_str
+                    "error": error_str,
                 }
-            
-            # Check for invalid API key (401)
+
             if status_code == 401 or "unauthorized" in error_str.lower() or "api key" in error_str.lower():
-                logger.error("[DEBUG VirusTotal] Invalid API key (401) - disabling VT analysis")
+                logger.error("[VirusTotal] Invalid API key (401) — key index %s disabled for this process", key_index)
+                pool.mark_rate_limited(key_index)
                 return {
                     "found": False,
                     "status": "INVALID_KEY",
                     "message": "VirusTotal API key invalid",
-                    "error": error_str
+                    "error": error_str,
                 }
-            
+
             if "NotFoundError" in str(type(e).__name__) or "not found" in error_str.lower():
                 return {"found": False, "message": "Hash not found in VirusTotal database"}
-            
+
             logger.error("VirusTotal API error: %s", e)
             return {"found": False, "error": error_str}
         except Exception as e:
-            logger.error("[DEBUG VirusTotal] Unexpected error: %s", e)
-            logger.error("Error checking VirusTotal: %s", e)
+            logger.error("[VirusTotal] Unexpected error: %s", e)
             return {"found": False, "error": str(e)}
 
     def _check_hash_virustotal_sync(self, file_hash: str) -> Optional[Dict[str, Any]]:
         """
         Synchronous version of VirusTotal hash check.
-
-        Args:
-            file_hash: SHA256 hash of the file
-
-        Returns:
-            VirusTotal analysis results or None if not found
+        Uses key pool with rotation; on 429 the current key is marked and next key is used next time.
         """
         if not self.enabled:
             return None
 
+        pool = _get_vt_key_pool()
+        if not pool:
+            return None
+        key_index, api_key = pool.wait_and_get_key()
+        if api_key is None:
+            return {
+                "found": False,
+                "status": "RATE_LIMITED",
+                "message": "VirusTotal daily/minute quota exhausted — skipping remaining lookups",
+            }
+
         try:
-            with vt.Client(self.api_key) as client:
+            with vt.Client(api_key) as client:
                 file_report = client.get_object(f"/files/{file_hash}")
 
-                # Extract relevant information
                 stats = file_report.last_analysis_stats
                 results = {
                     "found": True,
@@ -287,7 +433,6 @@ class VirusTotalAnalyzer(BaseAnalyzer):
                     "tags": getattr(file_report, "tags", []),
                 }
 
-                # Extract malware family names from detections
                 if hasattr(file_report, "last_analysis_results"):
                     malware_families = set()
                     for engine, result in file_report.last_analysis_results.items():
@@ -302,39 +447,36 @@ class VirusTotalAnalyzer(BaseAnalyzer):
                 return results
 
         except vt.error.APIError as e:
-            # ── DEBUG: Log VirusTotal API errors ──
             error_str = str(e)
             status_code = getattr(e, "status_code", None)
-            logger.warning("[DEBUG VirusTotal] API error (sync) - status_code=%s, error=%s", status_code, error_str)
-            
-            # Check for rate limit (429) or quota exceeded
+            logger.warning("[VirusTotal] API error (sync) - status_code=%s, error=%s", status_code, error_str)
+
             if status_code == 429 or "rate limit" in error_str.lower() or "quota" in error_str.lower():
-                logger.warning("[DEBUG VirusTotal] Rate limit detected (429) - continuing with degraded mode")
+                pool.mark_rate_limited(key_index)
                 return {
                     "found": False,
                     "status": "RATE_LIMITED",
                     "message": "VirusTotal rate limit exceeded",
-                    "error": error_str
+                    "error": error_str,
                 }
-            
-            # Check for invalid API key (401)
+
             if status_code == 401 or "unauthorized" in error_str.lower() or "api key" in error_str.lower():
-                logger.error("[DEBUG VirusTotal] Invalid API key (401) - disabling VT analysis")
+                logger.error("[VirusTotal] Invalid API key (401) — key index %s disabled", key_index)
+                pool.mark_rate_limited(key_index)
                 return {
                     "found": False,
                     "status": "INVALID_KEY",
                     "message": "VirusTotal API key invalid",
-                    "error": error_str
+                    "error": error_str,
                 }
-            
+
             if "NotFoundError" in str(type(e).__name__) or "not found" in error_str.lower() or "404" in error_str:
                 return {"found": False, "message": "Hash not found in VirusTotal database"}
-            
+
             logger.error("VirusTotal API error: %s", e)
             return {"found": False, "error": error_str}
         except Exception as e:
-            logger.error("[DEBUG VirusTotal] Unexpected error (sync): %s", e)
-            logger.error("Error checking VirusTotal: %s", e)
+            logger.error("[VirusTotal] Unexpected error (sync): %s", e)
             return {"found": False, "error": str(e)}
 
     def analyze(
@@ -374,14 +516,26 @@ class VirusTotalAnalyzer(BaseAnalyzer):
         }
 
         files_to_scan = self._get_files_to_scan(extension_dir)
-        logger.info("VirusTotal: Scanning %d files", len(files_to_scan))
+        pool = _get_vt_key_pool()
+        pool_desc = f"{pool.key_count} key(s), 4 req/min each" if pool else "no keys"
+        logger.info("VirusTotal: Scanning %d files (%s)", len(files_to_scan), pool_desc)
 
+        rate_limited_skips = 0
         for file_info in files_to_scan:
+            if pool and pool.is_exhausted:
+                rate_limited_skips += 1
+                results["file_results"].append({
+                    "file_name": file_info["name"],
+                    "file_path": file_info["path"].replace(extension_dir, ""),
+                    "skipped": True,
+                    "reason": "VirusTotal rate limit reached — file skipped",
+                })
+                continue
+
             try:
                 file_path = file_info["path"]
                 hashes = self.compute_all_hashes(file_path)
 
-                # Check hash against VirusTotal
                 vt_result = self._check_hash_virustotal_sync(hashes["sha256"])
 
                 file_result = {
@@ -395,7 +549,6 @@ class VirusTotalAnalyzer(BaseAnalyzer):
                 results["file_results"].append(file_result)
                 results["files_analyzed"] += 1
 
-                # Track detections
                 if vt_result and vt_result.get("found"):
                     stats = vt_result.get("detection_stats", {})
                     malicious = stats.get("malicious", 0)
@@ -406,9 +559,13 @@ class VirusTotalAnalyzer(BaseAnalyzer):
                         results["total_malicious"] += malicious
                         results["total_suspicious"] += suspicious
 
-                        # Collect malware families
                         families = vt_result.get("malware_families", [])
                         results["summary"]["detected_families"].extend(families)
+
+                # If VT returned a rate-limit status, stop further lookups this scan
+                if vt_result and vt_result.get("status") == "RATE_LIMITED":
+                    logger.warning("VirusTotal rate-limited — skipping remaining files")
+                    rate_limited_skips += 1
 
             except Exception as e:
                 logger.error("Error analyzing file %s: %s", file_info["path"], e)
@@ -418,6 +575,9 @@ class VirusTotalAnalyzer(BaseAnalyzer):
                         "error": str(e),
                     }
                 )
+
+        if rate_limited_skips:
+            results["rate_limited_skips"] = rate_limited_skips
 
         # Deduplicate malware families
         results["summary"]["detected_families"] = list(

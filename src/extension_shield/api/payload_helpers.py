@@ -21,24 +21,18 @@ def build_publisher_disclosures(
     metadata: Optional[Dict[str, Any]],
     governance_bundle: Optional[Dict[str, Any]],
 ) -> Dict[str, Any]:
-    """
-    Build publisher_disclosures from Chrome Web Store metadata (not manifest).
-    Used for the "Publisher & Disclosures" section in the extension card.
-    All fields are nullable; frontend shows "Unknown" for trader_status when missing and hides empty links.
-    """
+    """Build publisher_disclosures from CWS metadata for the extension card."""
     meta = metadata or {}
     store_listing = {}
     if governance_bundle and isinstance(governance_bundle.get("store_listing"), dict):
         store_listing = governance_bundle["store_listing"]
 
-    # Trader status: from CWS disclosure (TRADER | NON_TRADER | UNKNOWN)
     trader = meta.get("trader_status")
     if trader in ("TRADER", "NON_TRADER"):
         trader_status = trader
     else:
         trader_status = "UNKNOWN"
 
-    # Privacy policy URL: prefer store_listing extracted URL, else first URL in privacy_policy text
     privacy_policy_url = store_listing.get("privacy_policy_url")
     if not privacy_policy_url and meta.get("privacy_policy"):
         text = meta["privacy_policy"]
@@ -51,7 +45,6 @@ def build_publisher_disclosures(
             if not privacy_policy_url and urls:
                 privacy_policy_url = urls[0].rstrip(".,)")
 
-    # user_count: int or None
     user_count = meta.get("user_count")
     if user_count is not None and not isinstance(user_count, int):
         try:
@@ -59,7 +52,6 @@ def build_publisher_disclosures(
         except (TypeError, ValueError):
             user_count = None
 
-    # rating_value: float or None
     rating_value = meta.get("rating")
     if rating_value is not None and not isinstance(rating_value, (int, float)):
         try:
@@ -67,7 +59,6 @@ def build_publisher_disclosures(
         except (TypeError, ValueError):
             rating_value = None
 
-    # rating_count: int or None
     rating_count = meta.get("ratings_count") or meta.get("rating_count")
     if rating_count is not None and not isinstance(rating_count, int):
         try:
@@ -111,16 +102,7 @@ def build_report_view_model_safe(
 
 
 def upgrade_legacy_payload(payload: Dict[str, Any], extension_id: str) -> Dict[str, Any]:
-    """
-    Upgrade or recompute legacy scan payloads to include scoring_v2 and report view models.
-
-    Args:
-        payload: The legacy payload (may be missing scoring_v2 and report_view_model)
-        extension_id: Extension ID used to build SignalPacks and scoring.
-
-    Returns:
-        The payload that now includes scoring_v2, report_view_model, and consumer insights.
-    """
+    """Upgrade legacy payloads to include scoring_v2 and report_view_model."""
     has_scoring_v2_before = bool(
         payload.get("scoring_v2")
         or payload.get("governance_bundle", {}).get("scoring_v2")
@@ -163,6 +145,10 @@ def upgrade_legacy_payload(payload: Dict[str, Any], extension_id: str) -> Dict[s
             has_report_view_model_before,
         )
         return payload
+
+    import time as _time
+    _upgrade_start = _time.monotonic()
+    _UPGRADE_BUDGET_SECONDS = 5  # max wall-clock time for on-the-fly upgrade
 
     logger.info(
         "[UPGRADE] Upgrading legacy payload for extension_id=%s (has_scoring_v2=%s, has_report_view_model=%s)",
@@ -232,21 +218,27 @@ def upgrade_legacy_payload(payload: Dict[str, Any], extension_id: str) -> Dict[s
             upgraded = True
 
         if (not has_report_view_model_before) or force_recompute:
-            report_view_model = build_report_view_model(
-                manifest=manifest,
-                analysis_results=analysis_results,
-                metadata=metadata,
-                extension_id=extension_id,
-                scan_id=extension_id,
-                skip_llm=True,
-            )
-            payload["report_view_model"] = report_view_model
-            logger.info(
-                "[UPGRADE] Built report_view_model for extension_id=%s (force=%s, skip_llm=True)",
-                extension_id,
-                force_recompute,
-            )
-            upgraded = True
+            _elapsed = _time.monotonic() - _upgrade_start
+            if _elapsed > _UPGRADE_BUDGET_SECONDS:
+                logger.warning(
+                    "[UPGRADE] Skipping report_view_model build — budget exhausted (%.1fs > %ds) for extension_id=%s",
+                    _elapsed, _UPGRADE_BUDGET_SECONDS, extension_id,
+                )
+            else:
+                report_view_model = build_report_view_model(
+                    manifest=manifest,
+                    analysis_results=analysis_results,
+                    metadata=metadata,
+                    extension_id=extension_id,
+                    scan_id=extension_id,
+                    skip_llm=True,
+                )
+                payload["report_view_model"] = report_view_model
+                logger.info(
+                    "[UPGRADE] Built report_view_model for extension_id=%s (force=%s, skip_llm=True, %.1fs)",
+                    extension_id, force_recompute, _time.monotonic() - _upgrade_start,
+                )
+                upgraded = True
 
         ensure_consumer_insights(payload)
 
@@ -306,9 +298,7 @@ def upgrade_legacy_payload(payload: Dict[str, Any], extension_id: str) -> Dict[s
 
 
 def ensure_consumer_insights(payload: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Ensure that the payload contains consumer insights and summary in the report view model.
-    """
+    """Add consumer_insights to report_view_model when missing."""
     if "report_view_model" not in payload:
         payload["report_view_model"] = {}
 
@@ -390,10 +380,7 @@ def _is_i18n_placeholder(text: Any) -> bool:
 
 
 def ensure_description_in_meta(payload: Dict[str, Any]) -> None:
-    """
-    Ensure report_view_model.meta.description is populated from manifest or metadata
-    when missing. Fixes legacy Supabase rows that don't have meta.description.
-    """
+    """Populate meta.description from manifest/metadata when missing (legacy Supabase fix)."""
     rvm = payload.get("report_view_model")
     if not isinstance(rvm, dict):
         return
@@ -411,8 +398,40 @@ def ensure_description_in_meta(payload: Dict[str, Any]) -> None:
     # Don't set empty string - let frontend fall through to summary/one_liner
 
 
+def ensure_name_in_payload(payload: Dict[str, Any]) -> None:
+    """Resolve extension_name from metadata/manifest when missing."""
+    metadata = payload.get("metadata") or {}
+    manifest = payload.get("manifest") or {}
+    chrome_stats = metadata.get("chrome_stats") if isinstance(metadata, dict) else {}
+    if not isinstance(chrome_stats, dict):
+        chrome_stats = {}
+
+    candidates = [
+        payload.get("extension_name"),
+        metadata.get("title") if isinstance(metadata, dict) else None,
+        metadata.get("name") if isinstance(metadata, dict) else None,
+        chrome_stats.get("name"),
+        manifest.get("name") if isinstance(manifest, dict) else None,
+    ]
+    resolved = next(
+        (n for n in candidates if n and isinstance(n, str) and n.strip()
+         and n.strip() != "Unknown" and not _is_i18n_placeholder(n)),
+        None,
+    )
+    if resolved:
+        resolved = resolved.strip()
+        if not payload.get("extension_name") or payload["extension_name"] == payload.get("extension_id"):
+            payload["extension_name"] = resolved
+        rvm = payload.get("report_view_model")
+        if isinstance(rvm, dict):
+            meta = rvm.get("meta")
+            if isinstance(meta, dict):
+                if not meta.get("name") or meta["name"] == "Unknown Extension":
+                    meta["name"] = resolved
+
+
 def log_scan_results_return_shape(path: str, payload: Dict[str, Any]) -> None:
-    """Log a consistent shape for traceability when returning scan results."""
+    """Log payload shape for traceability."""
     if not isinstance(payload, dict):
         logger.info(
             "[DEBUG get_scan_results return_shape] path=%s payload_type=%s (non-dict)",

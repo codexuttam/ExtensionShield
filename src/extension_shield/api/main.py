@@ -50,6 +50,7 @@ from extension_shield.api.payload_helpers import (
     build_report_view_model_safe,
     ensure_consumer_insights,
     ensure_description_in_meta,
+    ensure_name_in_payload,
     log_scan_results_return_shape,
     upgrade_legacy_payload,
 )
@@ -1100,13 +1101,19 @@ async def run_analysis_workflow(url: str, extension_id: str):
             analysis_results = final_state.get("analysis_results", {}) or {}
 
             # Extract extension name from metadata or manifest
+            # Check all possible sources: webstore metadata, chromestats metadata, parsed manifest
             metadata = final_state.get("extension_metadata") or {}
             manifest = final_state.get("manifest_data") or {}
-            extension_name = (
-                metadata.get("title")
-                or metadata.get("name")
-                or manifest.get("name")
-                or extension_id
+            chrome_stats = metadata.get("chrome_stats") or {}
+            _name_candidates = [
+                metadata.get("title"),
+                metadata.get("name"),
+                chrome_stats.get("name") if isinstance(chrome_stats, dict) else None,
+                manifest.get("name"),
+            ]
+            extension_name = next(
+                (n for n in _name_candidates if n and isinstance(n, str) and n.strip() and n.strip() != "Unknown"),
+                extension_id,
             )
 
             # Ensure all values are not None
@@ -2210,6 +2217,7 @@ async def get_scan_results(identifier: str, http_request: Request):
         payload = upgrade_legacy_payload(payload, extension_id)
         payload = ensure_consumer_insights(payload)
         ensure_description_in_meta(payload)
+        ensure_name_in_payload(payload)
         # Add risk and signals mapping
         payload["risk_and_signals"] = _extract_risk_and_signals(payload)
         scan_results[extension_id] = payload
@@ -2227,10 +2235,36 @@ async def get_scan_results(identifier: str, http_request: Request):
             requester_id = getattr(getattr(http_request, "state", None), "user_id", None)
             if not requester_id or results.get("user_id") != requester_id:
                 raise HTTPException(status_code=404, detail="Scan results not found")
+        # Ensure extension_name is always populated, even for legacy DB rows
+        _db_metadata = results.get("metadata") or {}
+        if isinstance(_db_metadata, str):
+            try:
+                _db_metadata = json.loads(_db_metadata)
+            except Exception:
+                _db_metadata = {}
+        _db_manifest = results.get("manifest") or {}
+        if isinstance(_db_manifest, str):
+            try:
+                _db_manifest = json.loads(_db_manifest)
+            except Exception:
+                _db_manifest = {}
+        _db_chrome_stats = _db_metadata.get("chrome_stats") or {}
+        _db_name_candidates = [
+            results.get("extension_name"),
+            _db_metadata.get("title"),
+            _db_metadata.get("name"),
+            _db_chrome_stats.get("name") if isinstance(_db_chrome_stats, dict) else None,
+            _db_manifest.get("name"),
+        ]
+        _resolved_extension_name = next(
+            (n for n in _db_name_candidates if n and isinstance(n, str) and n.strip() and n.strip() != "Unknown"),
+            results.get("extension_id") or identifier,
+        )
+
         # Ensure consistent field naming for frontend
         formatted_results: Dict[str, Any] = {
             "extension_id": results.get("extension_id"),
-            "extension_name": results.get("extension_name"),
+            "extension_name": _resolved_extension_name,
             "slug": results.get("slug"),
             "url": results.get("url"),
             "timestamp": results.get("timestamp"),
@@ -2276,6 +2310,7 @@ async def get_scan_results(identifier: str, http_request: Request):
         payload = upgrade_legacy_payload(formatted_results, extension_id)
         payload = ensure_consumer_insights(payload)
         ensure_description_in_meta(payload)
+        ensure_name_in_payload(payload)
         # Add risk and signals mapping
         payload["risk_and_signals"] = _extract_risk_and_signals(payload)
         scan_results[extension_id] = payload  # Cache in memory
@@ -2321,6 +2356,7 @@ async def get_scan_results(identifier: str, http_request: Request):
             payload = upgrade_legacy_payload(payload, extension_id)
             payload = ensure_consumer_insights(payload)
             ensure_description_in_meta(payload)
+            ensure_name_in_payload(payload)
             # Add risk and signals mapping
             payload["risk_and_signals"] = _extract_risk_and_signals(payload)
             scan_results[extension_id] = payload  # Cache in memory
@@ -2705,6 +2741,24 @@ async def get_recent_scans(limit: int = 10, search: str = None):
                         logger.info(f"[get_recent_scans] Diagnostic - Status counts: {status_counts}")
             except Exception as diag_error:
                 logger.warning(f"[get_recent_scans] Diagnostic check failed: {diag_error}")
+
+        # Ensure extension_name is always populated, even for legacy rows
+        for scan in recent:
+            if not scan.get("extension_name") or scan["extension_name"] == scan.get("extension_id"):
+                _meta = scan.get("metadata") or {}
+                _manifest = scan.get("manifest") or {}
+                _cs = _meta.get("chrome_stats") if isinstance(_meta, dict) else {}
+                if not isinstance(_cs, dict):
+                    _cs = {}
+                _candidates = [
+                    _meta.get("title") if isinstance(_meta, dict) else None,
+                    _meta.get("name") if isinstance(_meta, dict) else None,
+                    _cs.get("name"),
+                    _manifest.get("name") if isinstance(_manifest, dict) else None,
+                ]
+                _resolved = next((n for n in _candidates if n and isinstance(n, str) and n.strip()), None)
+                if _resolved:
+                    scan["extension_name"] = _resolved.strip()
 
         # Add risk_and_signals mapping to each scan.
         # If legacy recent rows are missing layer scores, backfill from full scan result dynamically.
