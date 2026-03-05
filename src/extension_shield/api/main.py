@@ -124,11 +124,15 @@ def _init_sentry() -> None:
 
 _init_sentry()
 
-# Initialize FastAPI app
+# Disable interactive API docs in production to reduce attack surface and avoid exposing internal routes
+_prod = get_settings().is_prod()
 app = FastAPI(
     title="Project Atlas API",
     description="REST API for Chrome extension security analysis",
     version="1.0.0",
+    docs_url=None if _prod else "/docs",
+    redoc_url=None if _prod else "/redoc",
+    openapi_url=None if _prod else "/openapi.json",
 )
 
 # Global rate limiting toggle
@@ -1864,7 +1868,10 @@ async def get_community_review_queue():
 async def claim_community_review_item(body: ReviewQueueClaimRequest, http_request: Request):
     """Claim a queue item (set status=in_review, optional assigned_to_user_id)."""
     if not isinstance(db, SupabaseDatabase):
-        raise HTTPException(status_code=501, detail="Review queue is not available")
+        raise HTTPException(
+            status_code=501,
+            detail={"error": "not_implemented", "feature": "community_queue", "mode": get_feature_flags().mode},
+        )
     user_id = _get_user_id(http_request)
     ok = db.claim_review_queue_item(body.queue_item_id, user_id)
     if not ok:
@@ -1876,7 +1883,10 @@ async def claim_community_review_item(body: ReviewQueueClaimRequest, http_reques
 async def vote_community_review_item(body: ReviewQueueVoteRequest, http_request: Request):
     """Upsert a vote (up/down) and optional note. Requires authenticated user."""
     if not isinstance(db, SupabaseDatabase):
-        raise HTTPException(status_code=501, detail="Review queue is not available")
+        raise HTTPException(
+            status_code=501,
+            detail={"error": "not_implemented", "feature": "community_queue", "mode": get_feature_flags().mode},
+        )
     if body.vote not in ("up", "down"):
         raise HTTPException(status_code=400, detail="vote must be 'up' or 'down'")
     user_id = _get_user_id(http_request)

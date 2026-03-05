@@ -37,8 +37,8 @@ ENV VITE_API_BASE_URL=${VITE_API_BASE_URL:-}
 ENV VITE_API_URL=${VITE_API_BASE_URL:-}
 ENV VITE_AUTH_ENABLED=${VITE_AUTH_ENABLED:-true}
 
-# Debug: Show what values we have (will be empty if not passed)
-RUN echo "Building frontend with VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-NOT_SET}"
+# Do not echo build-arg values (they may contain URLs/keys). Log only set/unset.
+RUN if [ -n "$VITE_SUPABASE_URL" ]; then echo "VITE_SUPABASE_URL=set"; else echo "VITE_SUPABASE_URL=unset"; fi
 
 # Build production bundle
 RUN npm run build

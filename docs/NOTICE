@@ -1,0 +1,21 @@
+ExtensionShield
+Copyright (c) 2026 Stanzin Norzang
+
+This project is licensed under the MIT License. See the LICENSE file for the full text.
+
+---
+
+Third-party attributions
+-----------------------
+
+ExtensionShield incorporates or was inspired by the following:
+
+- ThreatXtension (https://github.com/barvhaim/ThreatXtension)
+  We took inspiration from ThreatXtension in the same space (Chrome extension
+  security scanning, VirusTotal integration). Our scanner, SAST, and scoring
+  pipeline are implemented independently. Supabase migration schemas were
+  initially derived from SQLite schema patterns from that project; see
+  supabase/migrations/ and supabase/schemas/ for file-level comments.
+
+Other dependencies are governed by their respective licenses; see
+pyproject.toml and frontend/package.json.

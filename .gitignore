@@ -248,3 +248,6 @@ supabase/.volumes/
 /data/intel/*
 !/data/intel/README.md
 !/data/intel/.gitignore
+
+# Internal QA exports (do not commit; remove from tracking if already committed)
+docs/qa_extensionshield/

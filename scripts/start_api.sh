@@ -33,8 +33,11 @@ else
   echo "SUPABASE_URL: not set"
 fi
 echo "LLM_PROVIDER: ${LLM_PROVIDER:-ollama (from .env)}"
+# Do not echo LLM_FALLBACK_CHAIN value (may contain provider names; avoid accidental leak)
 if [ -n "${LLM_FALLBACK_CHAIN:-}" ]; then
-  echo "LLM_FALLBACK_CHAIN: ${LLM_FALLBACK_CHAIN}"
+  echo "LLM_FALLBACK_CHAIN: set"
+else
+  echo "LLM_FALLBACK_CHAIN: not set"
 fi
 
 # Run migrations if Supabase is configured (non-blocking: start API first so healthcheck passes)

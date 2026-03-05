@@ -16,7 +16,8 @@ jobs:
 
       - name: Fail if private paths are tracked
         run: |
-          PATTERNS='^\.env$|\.db$|extensions_storage/|contracts/|^docs/|freelancer|\.railway|\.(pem|p12|pfx|key)$'
+          # docs/ is intentionally tracked (GET_STARTED, CONTRIBUTING, etc.). Do not block it.
+          PATTERNS='^\.env$|\.db$|extensions_storage/|contracts/|freelancer|\.railway|\.(pem|p12|pfx|key)$'
           TRACKED=$(git ls-files | grep -E "$PATTERNS" || true)
           if [ -n "$TRACKED" ]; then
             echo "::error::The following private/sensitive paths must not be tracked. Add them to .gitignore and run 'git rm -r --cached <path>'."

@@ -1,6 +1,7 @@
 #!/bin/bash
 echo "🔄 Force refreshing ExtensionShield frontend..."
-cd /Users/stanzin/Desktop/ExtensionShield/frontend
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
 # Kill any running dev servers
 echo "Stopping any running dev servers..."
