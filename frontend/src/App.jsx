@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -524,7 +524,13 @@ function getRouteSegment(pathname) {
 function AppContent() {
   const location = useLocation();
   const routeSegment = getRouteSegment(location.pathname);
-
+//Scroll to top on route change
+  useLayoutEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  }, [location.pathname]);
   return (
     <div className="extensionshield-app" data-route={routeSegment}>
       <AppBackground />
