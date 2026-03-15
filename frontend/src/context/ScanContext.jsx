@@ -184,6 +184,23 @@ export const ScanProvider = ({ children }) => {
 
       setCurrentExtensionId(extId);
 
+      // Fetch-first: if extension was already scanned, use cached results and skip trigger (minimal delay).
+      const existingResults = await realScanService.getRealScanResults(extId);
+      if (existingResults) {
+        navigate(`/scan/progress/${extId}`, {
+          state: {
+            extensionName: options.extensionName ?? undefined,
+            extensionLogoUrl: options.extensionLogoUrl ?? undefined,
+          },
+        });
+        setScanResults(existingResults);
+        setError("");
+        setScanStage(null);
+        setIsScanning(false);
+        void Promise.all([loadScanHistory(), loadDashboardStats()]);
+        return;
+      }
+
       // Daily scan limit check (cached lookups still allowed) - skip in development
       const isDev = import.meta.env.DEV || import.meta.env.MODE === 'development';
       if (!isDev) {
@@ -222,8 +239,8 @@ export const ScanProvider = ({ children }) => {
           extensionLogoUrl: options.extensionLogoUrl ?? undefined,
         },
       });
-      
-      // Always trigger scan (for cached lookups, backend bumps extension to top of recent scans)
+
+      // Trigger scan (backend returns immediately with already_scanned if cached)
       const scanTrigger = await realScanService.triggerScan(urlToScan);
 
       if (!scanTrigger.already_scanned && scanTrigger.status !== "running" && scanTrigger.status !== "completed") {

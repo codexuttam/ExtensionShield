@@ -579,6 +579,34 @@ def _get_payload_version(payload: Dict[str, Any]) -> Optional[str]:
     return None
 
 
+def _fast_live_version_check(extension_id: str, timeout_seconds: float = 2.0) -> Optional[str]:
+    """
+    Quick version check for cached-path: fetch live version from ChromeStats only
+    with a short timeout so we don't block the 'already scanned' response.
+    Returns live version string or None on timeout/error (caller treats None as unchanged).
+    """
+    try:
+        downloader = ChromeStatsDownloader()
+        if not downloader.enabled:
+            return None
+        # Use a short timeout so cached lookups return quickly
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+            fut = ex.submit(downloader._get_extension_details, extension_id)
+            try:
+                details = fut.result(timeout=timeout_seconds)
+            except concurrent.futures.TimeoutError:
+                logger.debug("[CACHED_PATH] Fast version check timed out for %s", extension_id)
+                return None
+        if isinstance(details, dict):
+            ver = details.get("version")
+            if isinstance(ver, str) and ver.strip():
+                return ver.strip()
+    except Exception as exc:
+        logger.debug("[CACHED_PATH] Fast version check failed for %s: %s", extension_id, exc)
+    return None
+
+
 def _hydrate_db_scan_result(results: Dict[str, Any], identifier: str) -> Dict[str, Any]:
     """Normalize a DB row into the API scan payload shape."""
     db_metadata = results.get("metadata") or {}
@@ -2250,20 +2278,18 @@ async def trigger_scan(scan_request: ScanRequest, background_tasks: BackgroundTa
         except Exception:
             cached_payload = None
 
-    # If we already have results and the store version is unchanged, treat this as a cached lookup.
+    # If we already have results, use a fast version check only (no blocking store refresh)
+    # so cached lookups return immediately. Full store refresh runs on GET when needed.
     if cached_payload:
-        refresh_result = _refresh_scan_payload_with_store_metadata(
-            cached_payload,
-            extension_id,
-            force=True,
+        cached_version = _get_payload_version(cached_payload)
+        live_version = _fast_live_version_check(extension_id, timeout_seconds=2.0)
+        version_changed = (
+            cached_version is not None
+            and live_version is not None
+            and cached_version != live_version
         )
-        if not refresh_result.get("version_changed"):
-            if refresh_result.get("refreshed"):
-                logger.info(
-                    "[STORE_REFRESH] Refreshed cached store metrics for %s without deep rescan",
-                    extension_id,
-                )
-        # Bump extension to top of recent scans (for both auth and anonymous users)
+        if not version_changed:
+            # Bump extension to top of recent scans (for both auth and anonymous users)
             try:
                 db.touch_scan_result(extension_id)
             except Exception:
@@ -2276,19 +2302,22 @@ async def trigger_scan(scan_request: ScanRequest, background_tasks: BackgroundTa
                 except Exception:
                     pass
             scan_status[extension_id] = "completed"
+            logger.info(
+                "[CACHED_PATH] Returning cached results for %s (no version change)",
+                extension_id,
+            )
             return {
                 "message": "Cached results available",
                 "extension_id": extension_id,
                 "status": "completed",
                 "already_scanned": True,
                 "scan_type": "lookup",
-                "store_metrics_refreshed": bool(refresh_result.get("refreshed")),
             }
         logger.info(
-            "[STORE_REFRESH] Version change detected for %s (%s -> %s); starting deep rescan",
+            "[CACHED_PATH] Version change detected for %s (%s -> %s); starting deep rescan",
             extension_id,
-            refresh_result.get("cached_version"),
-            refresh_result.get("live_version"),
+            cached_version,
+            live_version,
         )
     elif _has_cached_results(extension_id):
         # File-only fallback: we know we have cached results but cannot safely inspect version.
@@ -2580,11 +2609,9 @@ async def get_scan_results(identifier: str, http_request: Request):
                 requester_id = getattr(getattr(http_request, "state", None), "user_id", None)
                 if not requester_id or payload.get("user_id") != requester_id:
                     raise HTTPException(status_code=404, detail="Scan results not found")
-            # Upgrade legacy payload and ensure consumer_insights
+            # Upgrade legacy payload and ensure consumer_insights (no blocking store refresh)
             payload = upgrade_legacy_payload(payload, extension_id)
             payload = ensure_consumer_insights(payload)
-            refresh_result = _refresh_scan_payload_with_store_metadata(payload, extension_id)
-            payload = refresh_result.get("payload") or payload
             ensure_description_in_meta(payload)
             ensure_name_in_payload(payload)
             # Add risk and signals mapping
@@ -2612,17 +2639,15 @@ async def get_scan_results(identifier: str, http_request: Request):
         had_scoring_v2 = bool(formatted_results.get("scoring_v2"))
         had_report_view_model = bool(formatted_results.get("report_view_model"))
         
-        # Upgrade legacy payload and ensure consumer_insights
+        # Upgrade legacy payload and ensure consumer_insights (no blocking store refresh)
         payload = upgrade_legacy_payload(formatted_results, extension_id)
         payload = ensure_consumer_insights(payload)
-        refresh_result = _refresh_scan_payload_with_store_metadata(payload, extension_id)
-        payload = refresh_result.get("payload") or payload
         ensure_description_in_meta(payload)
         ensure_name_in_payload(payload)
         # Add risk and signals mapping
         payload["risk_and_signals"] = _extract_risk_and_signals(payload)
         scan_results[extension_id] = payload  # Cache in memory
-        
+
         # Persist upgraded payload back to database (background, non-blocking)
         # Only if we actually computed new scoring_v2 or report_view_model
         now_has_scoring_v2 = bool(payload.get("scoring_v2"))

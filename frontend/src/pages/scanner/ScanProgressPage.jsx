@@ -36,6 +36,7 @@ const ScanProgressPage = () => {
     setError,
     setScanResults,
     setCurrentExtensionId,
+    scanResults,
   } = useScan();
   
   const [extensionName, setExtensionName] = useState(null);
@@ -73,12 +74,22 @@ const ScanProgressPage = () => {
     return () => { cancelled = true; };
   }, [scanId]);
 
+  // When results were already loaded (e.g. fetch-first cached path), skip polling and go to results.
+  useEffect(() => {
+    if (!scanId || !scanResults) return;
+    if (scanResults.extension_id !== scanId && scanResults.extension_slug !== scanId) return;
+    const route = getScanResultsRoute(scanId, scanResults.extension_name);
+    if (route) navigate(route, { replace: true });
+  }, [scanId, scanResults, navigate]);
+
   // Poll scan status while on this page (supports direct refresh/back navigation)
   // Stops polling once scan completes or fails to save server resources.
   // Also detects "already scanned" extensions (first poll returns scanned=true
   // before any in-progress state was observed).
   useEffect(() => {
     if (!scanId) return;
+    // If we already have results for this scan (e.g. fetch-first), don't poll.
+    if (scanResults && (scanResults.extension_id === scanId || scanResults.extension_slug === scanId)) return;
 
     let cancelled = false;
     let intervalId = null;
