@@ -8,6 +8,7 @@ and retrieve results.
 import base64
 import mimetypes
 import os
+import hmac
 from pathlib import Path
 
 # Load .env from project root so DB_BACKEND, SUPABASE_*, etc. are set before config/database init
@@ -461,21 +462,21 @@ def _require_admin_key(request: Request) -> None:
             status_code=403,
             detail="Admin API key is not configured"
         )
-    
-    provided_key = request.headers.get("X-Admin-Key") or request.headers.get("x-admin-key")
+ provided_key = request.headers.get("X-Admin-Key") or request.headers.get("x-admin-key")
     if not provided_key:
         raise HTTPException(
             status_code=403,
             detail="X-Admin-Key header is required"
         )
     
-    if provided_key != admin_key:
+    if not hmac.compare_digest(
+        provided_key.encode("utf-8"),
+        admin_key.encode("utf-8")
+    ):
         raise HTTPException(
             status_code=403,
             detail="Invalid admin API key"
         )
-
-
 def _require_admin_or_telemetry_key(request: Request) -> None:
     """
     Verify X-Admin-Key header matches ADMIN_API_KEY or TELEMETRY_ADMIN_KEY.
@@ -496,7 +497,16 @@ def _require_admin_or_telemetry_key(request: Request) -> None:
             status_code=403,
             detail="X-Admin-Key header is required"
         )
-    valid = (admin_key and provided == admin_key) or (telemetry_key and provided == telemetry_key)
+    valid = (
+        (admin_key and hmac.compare_digest(
+            provided.encode("utf-8"),
+            admin_key.encode("utf-8")
+        )) or
+        (telemetry_key and hmac.compare_digest(
+            provided.encode("utf-8"),
+            telemetry_key.encode("utf-8")
+        ))
+    )
     if not valid:
         raise HTTPException(
             status_code=403,
