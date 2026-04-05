@@ -101,6 +101,10 @@ jobs:
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
+    permissions:
+      actions: write    # Required for artifact deletion
+      contents: read    # For checking out code
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
