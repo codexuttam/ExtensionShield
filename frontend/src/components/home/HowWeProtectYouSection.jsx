@@ -142,13 +142,13 @@ export default function HowWeProtectYouSection() {
             transition={{ duration: 0.5, ease }}
           >
             <h2 id="how-protect-title" className="how-protect-title">
-              Why a &ldquo;safe&rdquo; extension can turn risky
+              Why extension governance has to happen before install
             </h2>
             <p className="how-protect-body">
-              Most incidents happen after an update. We flag risky changes before release (Pro) and can monitor updates for teams (Enterprise).
+              Extensions can change through updates, ownership shifts, new permissions, and remote behavior. ExtensionShield gives teams evidence before install, before release, and before allowlisting.
             </p>
             <p className="how-protect-tagline">
-              Batch scan every extension on your system and stay secure—no manual entry.
+              Scan, score, allow, block, monitor, or fix with one evidence-backed workflow.
             </p>
             <a
               href={CHROME_EXTENSION_STORE_URL}

@@ -37,6 +37,7 @@ const CompareIndexPage = React.lazy(() => import("../pages/compare/CompareIndexP
 const CompareCrxcavatorPage = React.lazy(() => import("../pages/compare/CompareCrxcavatorPage"));
 const CompareCrxplorerPage = React.lazy(() => import("../pages/compare/CompareCrxplorerPage"));
 const CompareExtensionAuditorPage = React.lazy(() => import("../pages/compare/CompareExtensionAuditorPage"));
+const CompareSpinAiPage = React.lazy(() => import("../pages/compare/CompareSpinAiPage"));
 
 // SEO keyword landing pages (high-intent) + educational hub
 const IsThisChromeExtensionSafePage = React.lazy(() => import("../pages/landing/IsThisChromeExtensionSafePage"));
@@ -44,6 +45,10 @@ const ChromeExtensionPermissionsPage = React.lazy(() => import("../pages/landing
 const ChromeExtensionSecurityScannerPage = React.lazy(() => import("../pages/landing/ChromeExtensionSecurityScannerPage"));
 const BrowserExtensionRiskAssessmentPage = React.lazy(() => import("../pages/landing/BrowserExtensionRiskAssessmentPage"));
 const CrxcavatorAlternativePage = React.lazy(() => import("../pages/landing/CrxcavatorAlternativePage"));
+const ExtensionSecurityPage = React.lazy(() => import("../pages/landing/ExtensionSecurityPage"));
+const ExtensionRiskScorePage = React.lazy(() => import("../pages/landing/ExtensionRiskScorePage"));
+const ExtensionPermissionsPage = React.lazy(() => import("../pages/landing/ExtensionPermissionsPage"));
+const ExtensionGovernancePage = React.lazy(() => import("../pages/landing/ExtensionGovernancePage"));
 
 // Blog (SEO long-tail)
 const BlogIndexPage = React.lazy(() => import("../pages/blog/BlogIndexPage"));
@@ -81,8 +86,8 @@ export const routes = [
     path: "/",
     element: <HomePage />,
     seo: {
-      title: "Free Chrome Extension Scanner & Security Audit | ExtensionShield",
-      description: "Free Chrome extension scanner and security audit for developers. Scan any extension by URL—get risk score, permissions & malware check. Audit CRX/ZIP builds before release.",
+      title: "Browser Extension Security & Governance Platform | ExtensionShield",
+      description: "Open-source browser extension security and governance platform. Scan Chrome extensions before install, audit private CRX/ZIP builds, and get evidence-backed risk scores.",
       canonical: "/"
     },
     priority: 1.0,
@@ -256,6 +261,50 @@ export const routes = [
     changefreq: "monthly"
   },
   {
+    path: "/extension-security",
+    element: <ExtensionSecurityPage />,
+    seo: {
+      title: "Browser Extension Security | Open-Source Extension Governance",
+      description: "Browser extension security platform for pre-install risk assessment, private CRX/ZIP audits, and enterprise extension governance.",
+      canonical: "/extension-security"
+    },
+    priority: 0.9,
+    changefreq: "monthly"
+  },
+  {
+    path: "/extension-risk-score",
+    element: <ExtensionRiskScorePage />,
+    seo: {
+      title: "Extension Risk Score | Security, Privacy, Governance Scoring",
+      description: "Understand ExtensionShield's extension risk score: security, privacy, and governance scoring for browser extension risk assessment.",
+      canonical: "/extension-risk-score"
+    },
+    priority: 0.85,
+    changefreq: "monthly"
+  },
+  {
+    path: "/extension-permissions",
+    element: <ExtensionPermissionsPage />,
+    seo: {
+      title: "Browser Extension Permissions Explained | Dangerous Permissions",
+      description: "Browser extension permissions explained: all-site access, cookies, history, clipboard, webRequest, scripting, and permission combinations.",
+      canonical: "/extension-permissions"
+    },
+    priority: 0.85,
+    changefreq: "monthly"
+  },
+  {
+    path: "/extension-governance",
+    element: <ExtensionGovernancePage />,
+    seo: {
+      title: "Extension Governance Platform | Browser Extension Compliance",
+      description: "Extension governance platform for browser extension compliance, allow/block decisions, update monitoring, policy evidence, and pre-install risk assessment.",
+      canonical: "/extension-governance"
+    },
+    priority: 0.9,
+    changefreq: "monthly"
+  },
+  {
     path: "/browser-extension-risk-assessment",
     element: <BrowserExtensionRiskAssessmentPage />,
     seo: {
@@ -283,8 +332,8 @@ export const routes = [
     path: "/compare",
     element: <CompareIndexPage />,
     seo: {
-      title: "Best Chrome Extension Security Scanner | CRXcavator Alternatives",
-      description: "Compare the best chrome extension security scanner tools. ExtensionShield vs CRXcavator, CRXplorer, ExtensionAuditor. Chrome extension risk score tool with security, privacy, and governance.",
+      title: "Best Browser Extension Security Tools | Scanner & Governance Comparison",
+      description: "Compare browser extension security tools. ExtensionShield vs Spin.ai, CRXcavator, CRXplorer, and Extension Auditor for risk scoring, governance, and audits.",
       canonical: "/compare"
     },
     priority: 0.8,
@@ -323,6 +372,17 @@ export const routes = [
     priority: 0.7,
     changefreq: "monthly"
   },
+  {
+    path: "/compare/spin-ai",
+    element: <CompareSpinAiPage />,
+    seo: {
+      title: "Spin.ai vs ExtensionShield | Browser Extension Security Comparison",
+      description: "Compare Spin.ai SpinMonitor and SpinCRX with ExtensionShield for browser extension security, governance, pre-install scanning, open-source trust, and private build audits.",
+      canonical: "/compare/spin-ai"
+    },
+    priority: 0.7,
+    changefreq: "monthly"
+  },
 
   // ============ CAREERS ROUTES ============
   {
@@ -352,8 +412,8 @@ export const routes = [
     path: "/blog",
     element: <BlogIndexPage />,
     seo: {
-      title: "Chrome Extension Security Blog | How to Audit & Check Extension Safety",
-      description: "How to check chrome extension permissions safely, detect malicious chrome extensions, and audit a chrome extension before installing. Extension security research and guides.",
+      title: "Browser Extension Security Blog | Permissions, Risk & Governance",
+      description: "Browser extension security guides: dangerous permissions, risky Chrome extensions, data theft, extension risk scores, governance, and honest scanner comparisons.",
       canonical: "/blog"
     },
     priority: 0.75,
@@ -365,33 +425,243 @@ export const routes = [
   },
   {
     path: "/blog/how-to-audit-chrome-extension-before-installing",
-    element: <BlogPostPage />,
-    seo: {
-      title: "How to Audit a Chrome Extension Before Installing | ExtensionShield",
-      description: "Step-by-step guide to audit a chrome extension before installing: permissions, risk score, and how to check if a Chrome extension is safe using a browser extension security scanner.",
-      canonical: "/blog/how-to-audit-chrome-extension-before-installing"
-    },
-    priority: 0.6,
-    changefreq: "monthly"
+    element: <Navigate to="/blog/how-to-check-if-chrome-extension-is-safe" replace />,
   },
   {
     path: "/blog/enterprise-browser-extension-risk-management",
+    element: <Navigate to="/blog/chrome-extension-allowlist-policy" replace />,
+  },
+  {
+    path: "/blog/how-to-detect-malicious-chrome-extensions",
+    element: <Navigate to="/blog/how-hackers-use-browser-extensions-to-steal-data" replace />,
+  },
+  {
+    path: "/blog/top-risky-chrome-extensions-2026",
     element: <BlogPostPage />,
     seo: {
-      title: "Enterprise Browser Extension Risk Management | ExtensionShield",
-      description: "How to run a browser extension risk management program: allowlist policy, compliance monitoring, shadow IT browser extensions, and chrome enterprise extension security.",
-      canonical: "/blog/enterprise-browser-extension-risk-management"
+      title: "Top Risky Chrome Extensions in 2026: What to Check Before You Install",
+      description: "A practical 2026 guide to risky Chrome extension patterns: broad permissions, data access, suspicious updates, and how to check risk before installing.",
+      canonical: "/blog/top-risky-chrome-extensions-2026"
     },
     priority: 0.6,
     changefreq: "monthly"
   },
   {
-    path: "/blog/how-to-detect-malicious-chrome-extensions",
+    path: "/blog/dangerous-chrome-extension-permissions",
     element: <BlogPostPage />,
     seo: {
-      title: "How to Detect Malicious Chrome Extensions | ExtensionShield",
-      description: "Signs of malicious chrome extensions, browser extension spyware, and how to detect data exfiltration and extension hijacking. Use a chrome extension security scanner to check if an extension is safe.",
-      canonical: "/blog/how-to-detect-malicious-chrome-extensions"
+      title: "What Permissions Are Dangerous in Chrome Extensions?",
+      description: "Dangerous Chrome extension permissions explained: all-site access, cookies, history, clipboard, scripting, webRequest, debugger, and risky combinations.",
+      canonical: "/blog/dangerous-chrome-extension-permissions"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/can-chrome-extensions-steal-data",
+    element: <BlogPostPage />,
+    seo: {
+      title: "Can Chrome Extensions Steal Data? What Users and Teams Need to Know",
+      description: "Can Chrome extensions steal data? Learn how extension permissions, page access, cookies, clipboard access, and network calls can expose sensitive information.",
+      canonical: "/blog/can-chrome-extensions-steal-data"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/how-to-check-if-chrome-extension-is-safe",
+    element: <BlogPostPage />,
+    seo: {
+      title: "How to Check if a Chrome Extension Is Safe Before Installing",
+      description: "A simple checklist to check if a Chrome extension is safe: permissions, publisher, reviews, updates, privacy policy, network behavior, and risk score.",
+      canonical: "/blog/how-to-check-if-chrome-extension-is-safe"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/chrome-extension-scanner-vs-governance-platform",
+    element: <BlogPostPage />,
+    seo: {
+      title: "Chrome Extension Scanner vs Extension Governance Platform",
+      description: "A scanner finds extension risk. A governance platform turns extension findings into allow, block, monitor, and audit decisions.",
+      canonical: "/blog/chrome-extension-scanner-vs-governance-platform"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/how-hackers-use-browser-extensions-to-steal-data",
+    element: <BlogPostPage />,
+    seo: {
+      title: "How Hackers Use Browser Extensions to Steal Data",
+      description: "Browser extension attack paths explained: malicious permissions, injected scripts, cookies, clipboard theft, update abuse, and data exfiltration.",
+      canonical: "/blog/how-hackers-use-browser-extensions-to-steal-data"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/spin-ai-vs-extensionshield",
+    element: <BlogPostPage />,
+    seo: {
+      title: "Spin.ai vs ExtensionShield: Honest Browser Extension Security Comparison",
+      description: "Compare Spin.ai SpinMonitor and SpinCRX with ExtensionShield for extension risk assessment, governance, open-source trust, and pre-install scanning.",
+      canonical: "/blog/spin-ai-vs-extensionshield"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/crxcavator-vs-extensionshield-2026",
+    element: <BlogPostPage />,
+    seo: {
+      title: "CRXcavator vs ExtensionShield in 2026",
+      description: "Compare CRXcavator and ExtensionShield for Chrome extension risk scores, transparent methodology, SAST, governance, and pre-install scanning.",
+      canonical: "/blog/crxcavator-vs-extensionshield-2026"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/extension-auditor-vs-extensionshield",
+    element: <BlogPostPage />,
+    seo: {
+      title: "Extension Auditor vs ExtensionShield: Which Extension Security Tool Fits?",
+      description: "Compare Extension Auditor and ExtensionShield for extension security, privacy review, monitoring, governance, open-source trust, and developer audits.",
+      canonical: "/blog/extension-auditor-vs-extensionshield"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/crxplorer-vs-extensionshield",
+    element: <BlogPostPage />,
+    seo: {
+      title: "CRXplorer vs ExtensionShield: Free Scanner or Governance Platform?",
+      description: "Compare CRXplorer and ExtensionShield for Chrome extension risk scoring, code review, methodology transparency, and governance workflows.",
+      canonical: "/blog/crxplorer-vs-extensionshield"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/chrome-web-store-ratings-do-not-prove-extension-safety",
+    element: <BlogPostPage />,
+    seo: {
+      title: "Why Chrome Web Store Ratings Do Not Prove an Extension Is Safe",
+      description: "Star ratings and reviews are useful, but they do not prove Chrome extension safety. Learn what ratings miss and what evidence to check instead.",
+      canonical: "/blog/chrome-web-store-ratings-do-not-prove-extension-safety"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/read-and-change-all-your-data-extension-permission",
+    element: <BlogPostPage />,
+    seo: {
+      title: "Read and Change All Your Data: Chrome Extension Permission Explained",
+      description: "What the 'read and change all your data' Chrome extension permission means, why it can be risky, and when it may be justified.",
+      canonical: "/blog/read-and-change-all-your-data-extension-permission"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/all-urls-chrome-extension-permission",
+    element: <BlogPostPage />,
+    seo: {
+      title: "What Is all_urls in Chrome Extensions?",
+      description: "Learn what the all_urls Chrome extension permission means, why all-site access is risky, and how to decide if it is justified.",
+      canonical: "/blog/all-urls-chrome-extension-permission"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/can-chrome-extensions-steal-cookies-sessions",
+    element: <BlogPostPage />,
+    seo: {
+      title: "Can Chrome Extensions Steal Cookies or Sessions?",
+      description: "Can browser extensions steal cookies or sessions? Learn how cookie permissions, page access, and token exposure can create session risk.",
+      canonical: "/blog/can-chrome-extensions-steal-cookies-sessions"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/browser-extension-supply-chain-attacks",
+    element: <BlogPostPage />,
+    seo: {
+      title: "Browser Extension Supply Chain Attacks Explained",
+      description: "Browser extension supply chain attacks explained: ownership changes, malicious updates, compromised publishers, remote configuration, and extension governance controls.",
+      canonical: "/blog/browser-extension-supply-chain-attacks"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/manifest-v3-extension-security",
+    element: <BlogPostPage />,
+    seo: {
+      title: "Manifest V3 Extension Security: What Changed and What Still Matters",
+      description: "Manifest V3 changed Chrome extension architecture, but permissions, host access, data flows, updates, and governance still determine extension risk.",
+      canonical: "/blog/manifest-v3-extension-security"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/chrome-extension-allowlist-policy",
+    element: <BlogPostPage />,
+    seo: {
+      title: "How to Build a Chrome Extension Allowlist Policy",
+      description: "Build a Chrome extension allowlist policy with risk scoring, permission thresholds, exception handling, monitoring, and audit evidence.",
+      canonical: "/blog/chrome-extension-allowlist-policy"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/browser-extension-compliance-checklist",
+    element: <BlogPostPage />,
+    seo: {
+      title: "Browser Extension Compliance Checklist for Security Teams",
+      description: "A browser extension compliance checklist for enterprise teams: inventory, permissions, privacy disclosures, update monitoring, allowlists, and audit evidence.",
+      canonical: "/blog/browser-extension-compliance-checklist"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/audit-crx-zip-before-release",
+    element: <BlogPostPage />,
+    seo: {
+      title: "How to Audit a CRX or ZIP Chrome Extension Before Release",
+      description: "Audit a private CRX or ZIP Chrome extension before release: SAST, permissions, privacy, policy checks, evidence, and fix guidance.",
+      canonical: "/blog/audit-crx-zip-before-release"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/best-chrome-extension-security-scanner-tools-2026",
+    element: <BlogPostPage />,
+    seo: {
+      title: "Best Chrome Extension Security Scanner Tools in 2026",
+      description: "Compare Chrome extension security scanner tools in 2026: ExtensionShield, Spin.ai, CRXcavator, Extension Auditor, and CRXplorer.",
+      canonical: "/blog/best-chrome-extension-security-scanner-tools-2026"
+    },
+    priority: 0.6,
+    changefreq: "monthly"
+  },
+  {
+    path: "/blog/extension-security-scoring-explained",
+    element: <BlogPostPage />,
+    seo: {
+      title: "Extension Security Scoring Explained: Security, Privacy, and Governance",
+      description: "Extension security scoring explained: how Security, Privacy, and Governance signals combine into an extension risk score.",
+      canonical: "/blog/extension-security-scoring-explained"
     },
     priority: 0.6,
     changefreq: "monthly"
@@ -402,8 +672,8 @@ export const routes = [
     path: "/enterprise",
     element: <EnterprisePage />,
     seo: {
-      title: "Browser Extension Risk Assessment & Governance (Allowlist, Monitoring) | ExtensionShield",
-      description: "Extension governance: allowlist policies, monitoring, audit exports. Browser extension risk assessment for enterprise. Manage Chrome extensions at scale.",
+      title: "Extension Governance Platform for Enterprise | ExtensionShield",
+      description: "Browser extension governance for enterprise: allowlist policies, update monitoring, audit exports, pre-install risk assessment, and compliance evidence.",
       canonical: "/enterprise"
     },
     priority: 0.8,
@@ -593,4 +863,3 @@ export const getSitemapRoutes = () => {
 };
 
 export default routes;
-

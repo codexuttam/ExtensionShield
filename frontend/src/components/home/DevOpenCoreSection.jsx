@@ -8,10 +8,11 @@ import SecurityPipeline from "./SecurityPipeline";
 import "./DevOpenCoreSection.scss";
 
 const PILLS = [
+  "Open-source core",
   "VirusTotal",
   "SAST",
-  "Rulepacks",
   "Evidence attached",
+  "Governance rulepacks",
 ];
 
 export default function DevOpenCoreSection({ reducedMotion = false }) {
@@ -35,11 +36,11 @@ export default function DevOpenCoreSection({ reducedMotion = false }) {
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             >
               <h2 id="dev-open-core-heading" className="dev-open-core-title">
-                Developer Gate: pre-release Chrome extension audit
+                Open-source core. Governance where decisions happen.
               </h2>
-              <h3 className="dev-open-core-h3">Private build audit (Pro)</h3>
+              <h3 className="dev-open-core-h3">Private build audit for developers</h3>
               <p className="dev-open-core-subhead">
-                Upload a private CRX/ZIP before release. We flag risky patterns, attach evidence (file + rule), and suggest fixes.
+                Upload a private CRX/ZIP before release. ExtensionShield flags risky code, excessive permissions, privacy gaps, and policy issues with file-level evidence and fix guidance.
               </p>
               <div className="dev-open-core-pills" role="list">
                 {PILLS.map((label) => (

@@ -9,8 +9,8 @@ const CompareIndexPage = () => {
   return (
     <>
       <SEOHead
-        title="Best Chrome Extension Security Scanner | CRXcavator Alternatives"
-        description="Compare the best chrome extension security scanner tools. ExtensionShield vs CRXcavator, CRXplorer, ExtensionAuditor. Chrome extension risk score tool with security, privacy, and governance."
+        title="Best Browser Extension Security Tools | Scanner & Governance Comparison"
+        description="Compare browser extension security tools. ExtensionShield vs Spin.ai, CRXcavator, CRXplorer, and Extension Auditor for risk scoring, governance, and audits."
         pathname="/compare"
         ogType="website"
       />
@@ -24,9 +24,9 @@ const CompareIndexPage = () => {
           </div>
 
           <header className="compare-header">
-            <h1>Best Chrome Extension Security Scanner</h1>
+            <h1>Best Browser Extension Security Tools</h1>
             <p>
-              Compare chrome extension security scanners and extension risk score tools. See how ExtensionShield stacks up against CRXcavator, CRXplorer, and ExtensionAuditor — and why teams choose us for browser extension security audit and extension governance.
+              Compare chrome extension security scanners, extension risk score tools, and governance platforms. See how ExtensionShield stacks up against Spin.ai, CRXcavator, CRXplorer, and Extension Auditor.
             </p>
           </header>
 
@@ -36,13 +36,14 @@ const CompareIndexPage = () => {
             </p>
 
             <p>
-              Looking for <strong>CRXcavator alternatives</strong>? CRXcavator is a legacy enterprise tool; ExtensionShield offers transparent scoring, SAST + VirusTotal, and extension governance. Below we compare ExtensionShield to other popular options.
+              Looking for <strong>CRXcavator alternatives</strong> or a <strong>Spin.ai alternative</strong> for extension-specific governance? ExtensionShield offers transparent scoring, open-source trust, SAST + VirusTotal, and pre-install extension governance. Below we compare ExtensionShield to other popular options.
             </p>
           </div>
 
           <div className="compare-links">
             <h3>ExtensionShield vs competitors</h3>
             <ul>
+              <li><Link to="/compare/spin-ai">ExtensionShield vs Spin.ai</Link></li>
               <li><Link to="/compare/crxcavator">ExtensionShield vs CRXcavator</Link></li>
               <li><Link to="/compare/crxplorer">ExtensionShield vs CRXplorer</Link></li>
               <li><Link to="/compare/extension-auditor">ExtensionShield vs ExtensionAuditor</Link></li>

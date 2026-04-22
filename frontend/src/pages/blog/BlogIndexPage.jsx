@@ -11,8 +11,8 @@ const BlogIndexPage = () => {
   return (
     <>
       <SEOHead
-        title="Chrome Extension Security Blog | How to Audit & Check Extension Safety"
-        description="How to check chrome extension permissions safely, detect malicious chrome extensions, and audit a chrome extension before installing. Extension security research and guides."
+        title="Browser Extension Security Blog | Permissions, Risk & Governance"
+        description="Browser extension security guides: dangerous permissions, risky Chrome extensions, data theft, extension risk scores, governance, and honest scanner comparisons."
         pathname="/blog"
         ogType="website"
       />
@@ -26,9 +26,9 @@ const BlogIndexPage = () => {
           </div>
 
           <header className="compare-header">
-            <h1>Chrome Extension Security Blog</h1>
+            <h1>Browser Extension Security Blog</h1>
             <p>
-              How to check chrome extension permissions safely, detect malicious chrome extensions, audit a chrome extension before installing, and manage enterprise browser extension risk. Guides and research from ExtensionShield.
+              Practical guides for checking extension safety, understanding permissions, detecting risky behavior, and building browser extension governance programs.
             </p>
           </header>
 

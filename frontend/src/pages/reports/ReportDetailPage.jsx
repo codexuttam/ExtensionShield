@@ -256,7 +256,7 @@ const ReportViewModelDetail = ({ report, rawScanResult, extensionId, onExportPdf
           <div style={{ marginTop: "1rem", display: "grid", gridTemplateColumns: "1fr", gap: "1rem" }}>
             <Card>
               <CardHeader>
-                <CardTitle>Privacy &amp; Compliance</CardTitle>
+                <CardTitle>Privacy &amp; Governance</CardTitle>
               </CardHeader>
               <CardContent>
                 {privacy?.privacy_snapshot && (

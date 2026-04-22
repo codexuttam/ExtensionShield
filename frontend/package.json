@@ -6,7 +6,7 @@
   "author": "Stanzin",
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.19.0"
   },
   "scripts": {
     "dev": "vite",
@@ -72,7 +72,7 @@
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",
     "tailwindcss-animate": "^1.0.7",
-    "vite": "^7.3.2",
+    "vite": "7.3.2",
     "vitest": "^3.2.4"
   },
   "overrides": {

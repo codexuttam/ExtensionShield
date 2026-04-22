@@ -162,8 +162,8 @@ const EnterprisePage = () => {
   return (
     <>
       <SEOHead
-        title="Browser Extension Risk Assessment & Governance (Allowlist, Monitoring) | ExtensionShield"
-        description="Extension governance: allowlist policies, monitoring, audit exports. Browser extension risk assessment for enterprise. Manage Chrome extensions at scale."
+        title="Extension Governance Platform for Enterprise | ExtensionShield"
+        description="Browser extension governance for enterprise: allowlist policies, update monitoring, audit exports, pre-install risk assessment, and compliance evidence."
         pathname="/enterprise"
         ogType="website"
         schema={faqSchema}
@@ -175,9 +175,9 @@ const EnterprisePage = () => {
             <span className="arrow">←</span> Back
           </button>
 
-          <h1>Request an Enterprise Pilot</h1>
+          <h1>Request an Extension Governance Pilot</h1>
           <p>
-            Monitoring, alerting, governance, and audit-ready exports for teams. No self-serve checkout — we’ll set up a pilot with you.
+            Govern browser extensions before they become shadow IT. Get allow/block policies, update monitoring, risk alerts, and audit-ready evidence for your team.
           </p>
         </div>
 
@@ -303,5 +303,4 @@ const EnterprisePage = () => {
 };
 
 export default EnterprisePage;
-
 

@@ -134,7 +134,7 @@ const HomePage = () => {
     "name": "ExtensionShield",
     "url": "https://extensionshield.com",
     "logo": "https://extensionshield.com/logo.png",
-    "description": "Chrome extension scanner — safety reports in seconds.",
+    "description": "Open-source browser extension security and governance platform.",
     "sameAs": [
       "https://github.com/Stanzin7/ExtensionShield"
     ]
@@ -150,7 +150,7 @@ const HomePage = () => {
       { "@type": "Offer", "price": "0", "priceCurrency": "USD", "description": "Free public extension scan by Chrome Web Store URL" },
       { "@type": "Offer", "description": "Pro: private CRX/ZIP security audit and vulnerability scan" }
     ],
-    "description": "Chrome extension security scanner. Scan by Chrome Web Store URL for free. Upload private CRX/ZIP for pre-release security audit, vulnerability scanning, and fix suggestions.",
+    "description": "Open-source browser extension security and governance platform. Scan Chrome Web Store extensions, audit private CRX/ZIP builds, and generate evidence-backed Security, Privacy, and Governance reports.",
     "url": "https://extensionshield.com/scan"
   };
 
@@ -180,8 +180,8 @@ const HomePage = () => {
       },
       {
         "@type": "Question",
-        "name": "Is the Chrome extension scanner free?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Our free extension scanner lets you scan any Chrome extension by Web Store URL. Private CRX/ZIP upload and audit are available on Pro for developers." }
+        "name": "Is ExtensionShield just a Chrome extension scanner?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. The free scanner is the entry point. ExtensionShield is a browser extension security and governance platform with Security, Privacy, and Governance scoring, private CRX/ZIP audits, and evidence-backed decision support." }
       }
     ]
   };
@@ -189,12 +189,12 @@ const HomePage = () => {
   return (
     <>
       <SEOHead
-        title="Free Chrome Extension Scanner & Security Audit | ExtensionShield"
-        description="Free Chrome extension scanner and security audit for developers. Scan any extension by URL—get risk score, permissions & malware check. Audit CRX/ZIP builds before release."
+        title="Browser Extension Security & Governance Platform | ExtensionShield"
+        description="Open-source browser extension security and governance platform. Scan Chrome extensions before install, audit private CRX/ZIP builds, and get evidence-backed risk scores."
         pathname="/"
         ogType="website"
         schema={[organizationSchema, softwareAppSchema, faqSchema]}
-        keywords="free extension scanner, free extension audit, Chrome extension scanner, Chrome extension security, extension security audit, developer extension audit, scan Chrome extension"
+        keywords="browser extension security, extension governance platform, extension risk assessment, extension security audit, chrome extension security scanner, browser extension compliance"
       />
       
       <div className="home-page">
@@ -205,8 +205,8 @@ const HomePage = () => {
         >
           {/* Mobile/tablet: scanner not supported — show idea + Step-by-step guide + Check on desktop */}
           <div className="hero-mobile-message">
-            <p className="hero-tagline">CHROME EXTENSION SECURITY GATE</p>
-            <h1 className="hero-title">Ship safer Chrome extensions.</h1>
+            <p className="hero-tagline">OPEN-SOURCE EXTENSION GOVERNANCE</p>
+            <h1 className="hero-title">Browser extension security before install.</h1>
             <button
               type="button"
               className="hero-mobile-demo-btn"
@@ -254,10 +254,13 @@ const HomePage = () => {
 
               {heroAudience === "users" ? (
               <>
-                <p className="hero-tagline">Extension Risk Check</p>
+                <p className="hero-tagline">Open-source browser extension security</p>
                 <h1 className="hero-title">
-                  Know what your Chrome extensions can access.
+                  The browser extension security &amp; governance platform
                 </h1>
+                <p className="hero-subhead">
+                  Scan Chrome extensions before install, audit private builds before release, and turn Security, Privacy, and Governance evidence into allow, block, monitor, or fix decisions.
+                </p>
                 <button
                   type="button"
                   ref={demoTriggerRef}
@@ -371,7 +374,7 @@ const HomePage = () => {
                     <svg className="hero-scan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                       <path d="M20 6L9 17l-5-5" />
                     </svg>
-                    Checks permissions, network access, version history, and known threats.
+                    Pre-install risk assessment with permissions, network access, version history, and known threats.
                   </p>
                   <div className="hero-cta-block">
                     <a
@@ -389,12 +392,12 @@ const HomePage = () => {
               </>
               ) : (
               <>
-                <p className="hero-tagline">Pro • Private Build Audit</p>
+                <p className="hero-tagline">Pro • Private Build Governance</p>
                 <h1 className="hero-title">
-                  Chrome extension security audit before you ship
+                  Audit Chrome extensions before you ship
                 </h1>
                 <p className="hero-dev-body">
-                  Vulnerabilities, permissions, policy checks — with evidence and fix guidance.
+                  Vulnerabilities, permissions, privacy, and policy checks with evidence and fix guidance for private CRX/ZIP builds.
                 </p>
                 <p className="hero-dev-helper">Private by default — share only if you choose.</p>
                 <div className="hero-developers-cta">
@@ -448,16 +451,16 @@ const HomePage = () => {
             <div className="stat-item">
               <span className="stat-value live">
                 <span className="live-dot" aria-hidden="true" />
-                FREE
+                OPEN
               </span>
-              <span className="stat-label">PUBLIC SCANS</span>
+              <span className="stat-label">SOURCE CORE</span>
             </div>
             <div className="stat-divider" />
             <div className="stat-item">
               <span className="stat-value">
-                <span className="stat-value-number">100+</span>
+                <span className="stat-value-number">3</span>
               </span>
-              <span className="stat-label">Security rules</span>
+              <span className="stat-label">Risk layers</span>
             </div>
             <div className="stat-divider" />
             <div className="stat-item">
@@ -482,9 +485,9 @@ const HomePage = () => {
             initial={{ opacity: 0 }}
             animate={isVisible ? { opacity: 1 } : {}}
             transition={{ delay: 0.8, duration: 0.4 }}
-            aria-label="Scroll to see how extensions can turn risky"
+            aria-label="Scroll to see how extension governance works"
           >
-            <span>See how extensions can turn risky</span>
+            <span>See how extension governance works</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d="M12 5v14M5 12l7 7 7-7" />
             </svg>

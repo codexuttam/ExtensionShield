@@ -29,22 +29,22 @@ const ChromeExtensionSecurityScannerPage = () => {
           <header className="compare-header">
             <h1>Chrome Extension Security Scanner</h1>
             <p>
-              Check if a Chrome extension is safe before you install. ExtensionShield scans extensions for malware, privacy risks, and compliance issues and gives you a clear risk score in under a minute.
+              Check if a Chrome extension is safe before you install. ExtensionShield uses scanner workflows as the entry point into a broader browser extension security and governance platform.
             </p>
           </header>
 
           <div className="compare-prose">
             <p>
-              A <strong>chrome extension security scanner</strong> helps you understand what an extension can access and whether it has been flagged for malicious behavior. ExtensionShield combines static code analysis (SAST), permission checks, and threat intelligence so you get one actionable <strong>extension risk score</strong> plus a breakdown of Security, Privacy, and Governance.
+              A <strong>chrome extension security scanner</strong> helps you understand what an extension can access and whether it has been flagged for malicious behavior. ExtensionShield combines static code analysis (SAST), permission checks, threat intelligence, and governance signals so you get one actionable <strong>extension risk score</strong> plus a breakdown of Security, Privacy, and Governance.
             </p>
             <p>
               Paste a Chrome Web Store URL — no install required. We analyze permissions, network access, obfuscation, and known threats so you can decide if an extension is safe to use.
             </p>
             <ul>
               <li>Free to use; no account required for a single scan</li>
-              <li>Risk score 0–100 with Security, Privacy, and Compliance dimensions</li>
+              <li>Risk score 0–100 with Security, Privacy, and Governance dimensions</li>
               <li>Transparent methodology; we document how we score</li>
-              <li>Useful for consumers and teams evaluating extensions</li>
+              <li>Useful for consumers, developers, and teams evaluating extensions</li>
             </ul>
           </div>
 
@@ -56,6 +56,7 @@ const ChromeExtensionSecurityScannerPage = () => {
             <h3>Related</h3>
             <ul>
               <li><Link to="/research/methodology">How we score extensions</Link></li>
+              <li><Link to="/extension-security">Browser extension security platform</Link></li>
               <li><Link to="/enterprise">Enterprise extension security</Link></li>
               <li><Link to="/compare/crxcavator">CRXcavator alternative</Link></li>
             </ul>

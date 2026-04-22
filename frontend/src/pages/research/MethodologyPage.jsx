@@ -16,7 +16,7 @@ const methodologyFaqSchema = {
       "name": "How is the extension risk score calculated?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "ExtensionShield combines three pipelines: Security (40%), Privacy (35%), and Compliance (25%). Security uses open-source SAST (Semgrep-based rules), Privacy analyzes data collection and tracking, and Compliance covers policy alignment and developer reputation."
+        "text": "ExtensionShield combines three pipelines: Security (40%), Privacy (35%), and Governance (25%). Security uses open-source SAST (Semgrep-based rules), Privacy analyzes data collection and tracking, and Governance covers policy alignment and developer reputation."
       }
     },
     {
@@ -32,7 +32,7 @@ const methodologyFaqSchema = {
       "name": "What does the aggregate risk score mean?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The overall score (0–100) is a weighted combination of Security, Privacy, and Compliance. Lower scores indicate higher risk. We show the breakdown so you can see which dimension drives the result."
+        "text": "The overall score (0–100) is a weighted combination of Security, Privacy, and Governance. Lower scores indicate higher risk. We show the breakdown so you can see which dimension drives the result."
       }
     }
   ]
@@ -92,7 +92,7 @@ const MethodologyPage = () => {
               </div>
               <span className="formula-plus">+</span>
               <div className="formula-item">
-                <span className="formula-label">Compliance</span>
+                <span className="formula-label">Governance</span>
                 <span className="formula-weight">× 25%</span>
               </div>
             </div>
@@ -233,7 +233,7 @@ const MethodologyPage = () => {
               </svg>
             </div>
 
-            {/* Pipeline 3: Compliance */}
+            {/* Pipeline 3: Governance */}
             <div className="pipeline-card">
               <div className="pipeline-number">03</div>
               <div className="pipeline-content">
@@ -251,7 +251,7 @@ const MethodologyPage = () => {
                       </svg>
                       AUTO-UPDATED
                     </div>
-                    <h3>Compliance</h3>
+                    <h3>Governance</h3>
                     <h4 className="tech-credit">Policy Engine (Enterprise)</h4>
                     <p className="pipeline-enterprise-note">
                       Enterprises get this pipeline in their reports; it is not open source. From a regulation standpoint, reports include permission justification, alignment with GDPR and SOC2, developer reputation signals, and custom policy enforcement so you can prove due diligence and enforce your own rules.
@@ -267,7 +267,7 @@ const MethodologyPage = () => {
                 </div>
                 <div className="pipeline-right">
                   <div className="pipeline-dial-wrapper">
-                    <DonutScore score={52} band={getBandFromScore(52)} size={240} label="COMPLIANCE" />
+                    <DonutScore score={52} band={getBandFromScore(52)} size={240} label="GOVERNANCE" />
                   </div>
                 </div>
               </div>
@@ -291,4 +291,3 @@ const MethodologyPage = () => {
 };
 
 export default MethodologyPage;
-

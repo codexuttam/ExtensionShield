@@ -15,8 +15,14 @@ export const topNavItems = [
     category: NAV_CATEGORIES.PRODUCT,
     label: "Scan",
     path: "/scan",
-    matchPaths: ["/scan"],
+    matchPaths: ["/scan", "/extension-security", "/extension-risk-score", "/extension-permissions"],
     dropdownItems: [
+      {
+        icon: "🛡️",
+        label: "Security Platform",
+        description: "Open-source extension governance",
+        path: "/extension-security"
+      },
       {
         icon: "🔍",
         label: "Risk Check (Free)",
@@ -68,7 +74,7 @@ export const topNavItems = [
     category: NAV_CATEGORIES.ENTERPRISE,
     label: "Enterprise",
     path: "/enterprise",
-    matchPaths: ["/enterprise"],
+    matchPaths: ["/enterprise", "/extension-governance"],
     dropdownItems: [
       {
         icon: "🏢",
@@ -81,6 +87,12 @@ export const topNavItems = [
         label: "Monitoring & Alerts",
         description: "Real-time updates",
         path: "/enterprise#monitoring"
+      },
+      {
+        icon: "📋",
+        label: "Extension Governance",
+        description: "Policy evidence & approvals",
+        path: "/extension-governance"
       }
     ]
   }
@@ -139,16 +151,18 @@ export const userMenuItems = [
  * Two-column layout: left = brand + disclaimer, right = link groups.
  */
 export const footerConfig = {
-  disclaimer: "Comprehensive extension governance through security, privacy, and compliance analysis. We aggregate multiple dimensions into a single actionable score. So you can trust the results you find.",
-  tagline: "Extension security you can trust.",
+  disclaimer: "Open-source browser extension security and governance through Security, Privacy, and Governance analysis. ExtensionShield turns extension evidence into allow, block, monitor, or fix decisions.",
+  tagline: "Pre-install extension security you can trust.",
   linkGroups: [
     {
       heading: "Product",
       links: [
         { label: "Risk Check (Free)", path: "/scan" },
         { label: "Private Build Audit (Pro)", path: "/scan/upload" },
+        { label: "Extension Security", path: "/extension-security" },
+        { label: "Risk Score", path: "/extension-risk-score" },
         { label: "Is extension safe?", path: "/is-this-chrome-extension-safe" },
-        { label: "Scan History", path: "/scan/history" }
+        { label: "Permissions", path: "/extension-permissions" }
       ]
     },
     {
@@ -157,12 +171,13 @@ export const footerConfig = {
         { label: "How We Score", path: "/research/methodology" },
         { label: "Case Studies", path: "/research/case-studies" },
         { label: "Compare Scanners", path: "/compare" },
-        { label: "Benchmarks", path: "/research/benchmarks" }
+        { label: "Spin.ai Comparison", path: "/compare/spin-ai" }
       ]
     },
     {
       heading: "Company",
       links: [
+        { label: "Extension Governance", path: "/extension-governance" },
         { label: "Enterprise", path: "/enterprise" },
         { label: "Careers", path: "/careers" },
         { label: "Contribute", path: "/contribute" }
@@ -187,4 +202,3 @@ export default {
   getMobileNavSections,
   NAV_CATEGORIES,
 };
-

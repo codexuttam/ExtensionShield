@@ -56,6 +56,7 @@ const BrowserExtensionRiskAssessmentPage = () => {
             <ul>
               <li><Link to="/research/methodology">How we score extensions</Link></li>
               <li><Link to="/scan">Scan an extension</Link></li>
+              <li><Link to="/extension-governance">Extension governance platform</Link></li>
               <li><Link to="/compare">Compare extension scanners</Link></li>
             </ul>
           </div>
