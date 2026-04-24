@@ -1004,7 +1004,10 @@ def _extract_feedback_versions(payload: Optional[Dict[str, Any]]) -> tuple[Optio
 
     metadata = _coerce_json_dict(payload.get("metadata"))
     summary = _coerce_json_dict(payload.get("summary"))
-    report_view_model = _coerce_json_dict(payload.get("report_view_model"))
+    report_view_model_source = payload.get("report_view_model")
+    if not report_view_model_source:
+        report_view_model_source = summary.get("report_view_model")
+    report_view_model = _coerce_json_dict(report_view_model_source)
     report_meta = _coerce_json_dict(report_view_model.get("meta"))
 
     scoring_v2 = _coerce_json_dict(payload.get("scoring_v2"))
