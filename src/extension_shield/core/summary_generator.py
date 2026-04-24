@@ -35,6 +35,40 @@ def _summary_contradicts_label(text: str, score_label: str) -> bool:
     return False
 
 
+def _extract_response_model_version(response: Any) -> Optional[str]:
+    """Best-effort extraction of the actual model identifier returned by the LLM client."""
+    if response is None:
+        return None
+
+    direct_value = getattr(response, "model", None) or getattr(response, "model_name", None)
+    if isinstance(direct_value, str) and direct_value.strip():
+        return direct_value.strip()
+
+    response_metadata = getattr(response, "response_metadata", None)
+    if isinstance(response_metadata, dict):
+        for key in ("model_name", "model", "model_id", "deployment_name"):
+            value = response_metadata.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+
+    additional_kwargs = getattr(response, "additional_kwargs", None)
+    if isinstance(additional_kwargs, dict):
+        for key in ("model_name", "model", "model_id"):
+            value = additional_kwargs.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+
+    return None
+
+
+def _attach_model_version(summary: Dict[str, Any], model_version: Optional[str]) -> Dict[str, Any]:
+    """Return a shallow copy of a summary with model_version attached when known."""
+    normalized = dict(summary) if isinstance(summary, dict) else {}
+    if model_version:
+        normalized["model_version"] = model_version
+    return normalized
+
+
 class SummaryGenerator:
     """Generates executive summaries from all analysis results."""
 
@@ -473,11 +507,13 @@ class SummaryGenerator:
                 model_name=model_name,
                 model_parameters=model_parameters,
             )
+            resolved_model_version = _extract_response_model_version(response)
 
             # Parse JSON response
             parser = JsonOutputParser()
             summary = parser.parse(response.content if hasattr(response, "content") else str(response))
             if isinstance(summary, dict):
+                summary = _attach_model_version(summary, resolved_model_version)
                 score = summary.get("score")
                 score_label = summary.get("score_label")
                 if score is None:
@@ -542,10 +578,13 @@ class SummaryGenerator:
                     # )
                     # Return deterministic fallback
                     from extension_shield.core.report_view_model import _fallback_executive_summary
-                    return _fallback_executive_summary(
-                        score=score,
-                        score_label=score_label,
-                        host_scope_label=host_scope_label,
+                    return _attach_model_version(
+                        _fallback_executive_summary(
+                            score=score,
+                            score_label=score_label,
+                            host_scope_label=host_scope_label,
+                        ),
+                        resolved_model_version,
                     )
 
                 # ── Post-LLM sanity check: one_liner must not contradict score_label ──
@@ -557,12 +596,15 @@ class SummaryGenerator:
                         score_label,
                     )
                     from extension_shield.core.report_view_model import _fallback_executive_summary
-                    return _fallback_executive_summary(
-                        score=score,
-                        score_label=score_label,
-                        host_scope_label=host_scope_label,
+                    return _attach_model_version(
+                        _fallback_executive_summary(
+                            score=score,
+                            score_label=score_label,
+                            host_scope_label=host_scope_label,
+                        ),
+                        resolved_model_version,
                     )
-            
+
             logger.info("Executive summary generated successfully")
             return summary
         except Exception as exc:
