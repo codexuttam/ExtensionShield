@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: extension-shield
+    runtime: docker
+    plan: starter # Recommend starter ($7/mo) for stability, or 'free' for testing
+    region: oregon 
+    envVars:
+      - key: PORT
+        value: 10000 # Render default, or matches your EXPOSE
+      - key: EXTSHIELD_MODE
+        value: cloud
+      - key: LLM_PROVIDER
+        value: openai
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: "*" # Set specifically after you know your Render URL
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+    dockerContext: .
+    dockerfilePath: Dockerfile
+    healthCheckPath: /health
